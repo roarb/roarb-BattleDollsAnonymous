@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { GoogleGenAI } from '@google/genai';
-import { Shield, Loader2, Sparkles, Save, Activity } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Shield, Loader2, Sparkles, Save, Activity, Edit2, X, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 
 interface Model {
@@ -32,6 +32,12 @@ export function ArmyBuilder() {
   
   const [armyList, setArmyList] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  const [isEditingList, setIsEditingList] = useState(false);
+  const [editedList, setEditedList] = useState('');
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [saveForm, setSaveForm] = useState({ title: '', notes: '' });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -136,12 +142,41 @@ Please format the output as a clean Markdown document with:
         contents: prompt,
       });
 
-      setArmyList(response.text || 'Failed to generate list.');
+      const generatedText = response.text || 'Failed to generate list.';
+      setArmyList(generatedText);
+      setEditedList(generatedText);
+      setIsEditingList(false);
     } catch (err) {
       console.error("Error generating list:", err);
       setError("An error occurred while communicating with the AI Strategist.");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleSaveList = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !editedList || !saveForm.title) return;
+    
+    setSaving(true);
+    try {
+      await addDoc(collection(db, 'armyLists'), {
+        uid: user.uid,
+        title: saveForm.title,
+        pointsLimit: targetPoints,
+        faction: selectedFaction,
+        content: editedList,
+        notes: saveForm.notes,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      setIsSaveModalOpen(false);
+      setSaveForm({ title: '', notes: '' });
+      window.dispatchEvent(new CustomEvent('navigate', { detail: 'armies' }));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, 'armyLists');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -267,9 +302,20 @@ Please format the output as a clean Markdown document with:
                 Strategic Output
               </h2>
               {armyList && (
-                <button className="text-zinc-400 hover:text-fuchsia-400 transition-colors flex items-center text-sm font-medium px-3 py-1.5 rounded-md hover:bg-fuchsia-900/20">
-                  <Save className="h-4 w-4 mr-1.5" /> Save List
-                </button>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => setIsEditingList(!isEditingList)}
+                    className="text-zinc-400 hover:text-fuchsia-400 transition-colors flex items-center text-sm font-medium px-3 py-1.5 rounded-md hover:bg-fuchsia-900/20"
+                  >
+                    {isEditingList ? <><Check className="h-4 w-4 mr-1.5" /> Done Editing</> : <><Edit2 className="h-4 w-4 mr-1.5" /> Edit List</>}
+                  </button>
+                  <button 
+                    onClick={() => setIsSaveModalOpen(true)}
+                    className="text-zinc-400 hover:text-fuchsia-400 transition-colors flex items-center text-sm font-medium px-3 py-1.5 rounded-md hover:bg-fuchsia-900/20"
+                  >
+                    <Save className="h-4 w-4 mr-1.5" /> Save List
+                  </button>
+                </div>
               )}
             </div>
             
@@ -280,9 +326,17 @@ Please format the output as a clean Markdown document with:
                   <p className="m-0">{error}</p>
                 </div>
               ) : armyList ? (
-                <div className="markdown-body text-zinc-300 bg-zinc-950/30 p-6 rounded-xl border border-zinc-800/50">
-                  <ReactMarkdown>{armyList}</ReactMarkdown>
-                </div>
+                isEditingList ? (
+                  <textarea
+                    value={editedList}
+                    onChange={(e) => setEditedList(e.target.value)}
+                    className="w-full h-full min-h-[400px] bg-zinc-950/50 border border-zinc-800/50 rounded-xl p-6 text-zinc-300 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 transition-colors resize-none"
+                  />
+                ) : (
+                  <div className="markdown-body text-zinc-300 bg-zinc-950/30 p-6 rounded-xl border border-zinc-800/50">
+                    <ReactMarkdown>{editedList}</ReactMarkdown>
+                  </div>
+                )
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-6 opacity-60">
                   <div className="relative">
@@ -296,6 +350,77 @@ Please format the output as a clean Markdown document with:
           </div>
         </motion.div>
       </div>
+
+      {/* Save List Modal */}
+      <AnimatePresence>
+        {isSaveModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            >
+              <div className="flex justify-between items-center p-6 border-b border-zinc-800">
+                <h3 className="text-lg font-medium text-white flex items-center">
+                  <Save className="mr-2 h-5 w-5 text-fuchsia-500" />
+                  Save Army List
+                </h3>
+                <button
+                  onClick={() => setIsSaveModalOpen(false)}
+                  className="text-zinc-400 hover:text-white transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleSaveList} className="p-6 space-y-4">
+                <div>
+                  <label htmlFor="title" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">List Name</label>
+                  <input
+                    type="text"
+                    id="title"
+                    required
+                    value={saveForm.title}
+                    onChange={(e) => setSaveForm({...saveForm, title: e.target.value})}
+                    className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                    placeholder="e.g., 1000pt Strike Force"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="notes" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Strategic Notes (Optional)</label>
+                  <textarea
+                    id="notes"
+                    rows={3}
+                    value={saveForm.notes}
+                    onChange={(e) => setSaveForm({...saveForm, notes: e.target.value})}
+                    className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors resize-none"
+                    placeholder="e.g., Keep the warlord hidden until turn 3..."
+                  />
+                </div>
+                
+                <div className="pt-4 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsSaveModalOpen(false)}
+                    className="px-4 py-2 border border-zinc-700 rounded-lg shadow-sm text-sm font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 focus:ring-offset-zinc-900 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving || !saveForm.title}
+                    className="inline-flex justify-center px-4 py-2 border border-transparent rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-fuchsia-600 hover:bg-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-zinc-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed items-center"
+                  >
+                    {saving ? <Loader2 className="animate-spin h-4 w-4" /> : 'Save List'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

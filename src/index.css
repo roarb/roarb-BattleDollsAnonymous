@@ -6,7 +6,11 @@
 }
 
 body {
-  @apply bg-zinc-950 text-zinc-50 antialiased;
+  @apply text-zinc-50 antialiased bg-black;
+}
+
+#root {
+  @apply min-h-screen relative;
 }
 
 /* Custom Scrollbar */

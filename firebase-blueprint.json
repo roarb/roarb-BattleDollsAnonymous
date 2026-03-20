@@ -23,6 +23,14 @@
           "enum": ["admin", "user"],
           "description": "The user's role."
         },
+        "targetFaction": {
+          "type": "string",
+          "description": "The user's selected target faction for combat readiness."
+        },
+        "targetArmyId": {
+          "type": "string",
+          "description": "The user's selected target army ID for combat readiness."
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time"
@@ -129,16 +137,24 @@
           "type": "string",
           "description": "The faction for the list."
         },
-        "unitsJson": {
+        "content": {
           "type": "string",
-          "description": "A JSON string representing the units in the list."
+          "description": "The content of the army list (markdown or text)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "User notes for the army list."
         },
         "createdAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
         }
       },
-      "required": ["uid", "title", "pointsLimit", "faction", "unitsJson", "createdAt"]
+      "required": ["uid", "title", "pointsLimit", "faction", "content", "createdAt", "updatedAt"]
     }
   },
   "firestore": {

@@ -44,8 +44,10 @@ service cloud.firestore {
     //   - title: string (required) - The title of the army list.
     //   - pointsLimit: number (required) - The points limit for the list.
     //   - faction: string (required) - The faction for the list.
-    //   - unitsJson: string (required) - A JSON string representing the units in the list.
+    //   - content: string (required) - The content of the army list.
+    //   - notes: string (optional) - User notes.
     //   - createdAt: timestamp (required)
+    //   - updatedAt: timestamp (required)
     //
     // ===============================================================
     // Helper Functions
@@ -94,10 +96,12 @@ service cloud.firestore {
     // ===============================================================
 
     function isValidUser(data) {
-      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'createdAt']) &&
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'createdAt', 'targetFaction', 'targetArmyId']) &&
              data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
              data.email is string && isValidEmail(data.email) && data.email.size() < 150 &&
              (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100)) &&
+             (!('targetFaction' in data) || (data.targetFaction is string && data.targetFaction.size() < 100)) &&
+             (!('targetArmyId' in data) || (data.targetArmyId is string && data.targetArmyId.size() < 100)) &&
              data.role in ['admin', 'user'] &&
              (!('createdAt' in data) || data.createdAt is timestamp);
     }
@@ -126,13 +130,15 @@ service cloud.firestore {
     }
 
     function isValidArmyList(data) {
-      return hasOnlyAllowedFields(['uid', 'title', 'pointsLimit', 'faction', 'unitsJson', 'createdAt']) &&
+      return hasOnlyAllowedFields(['uid', 'title', 'pointsLimit', 'faction', 'content', 'notes', 'createdAt', 'updatedAt']) &&
              data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
              data.title is string && data.title.size() > 0 && data.title.size() < 150 &&
              data.pointsLimit is number && data.pointsLimit >= 0 && data.pointsLimit <= 100000 &&
              data.faction is string && data.faction.size() > 0 && data.faction.size() < 100 &&
-             data.unitsJson is string && data.unitsJson.size() < 100000 && // Allowing up to ~100KB for JSON
-             data.createdAt is timestamp;
+             data.content is string && data.content.size() < 100000 && // Allowing up to ~100KB for content
+             (!('notes' in data) || (data.notes is string && data.notes.size() < 10000)) &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
     }
 
     // ===============================================================

@@ -7,7 +7,7 @@ export function Login() {
   const { login } = useAuth();
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-zinc-950/20 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative z-10">
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

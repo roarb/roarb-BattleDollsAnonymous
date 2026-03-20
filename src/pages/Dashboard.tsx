@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { motion } from 'motion/react';
-import { Package, CheckCircle, Activity, Flame, Shield, TrendingUp } from 'lucide-react';
+import { Package, CheckCircle, Activity, Flame, Shield, TrendingUp, Settings } from 'lucide-react';
 
 interface Model {
   id: string;
@@ -17,11 +17,72 @@ interface Model {
 }
 
 const STATUS_COLORS = {
-  'Unbuilt': '#3f3f46', // zinc-700
-  'Assembled': '#52525b', // zinc-600
-  'Primed': '#71717a', // zinc-500
-  'Painted': '#c026d3', // fuchsia-600
-  'Tabletop Ready': '#d946ef', // fuchsia-500
+  'Unbuilt': '#52525b', // zinc-600
+  'Assembled': '#3b82f6', // blue-500
+  'Primed': '#eab308', // yellow-500
+  'Painted': '#d946ef', // fuchsia-500
+  'Tabletop Ready': '#10b981', // emerald-500
+};
+
+// Helper to calculate hobby streak
+const calculateStreak = (models: Model[]) => {
+  if (models.length === 0) return { current: 0, best: 0 };
+
+  // Get all unique dates of activity
+  const activityDates = new Set<string>();
+  models.forEach(m => {
+    if (m.updatedAt && m.updatedAt.toDate) {
+      const date = m.updatedAt.toDate();
+      date.setHours(0, 0, 0, 0);
+      activityDates.add(date.getTime().toString());
+    }
+  });
+
+  const sortedDates = Array.from(activityDates).map(Number).sort((a, b) => b - a);
+  if (sortedDates.length === 0) return { current: 0, best: 0 };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayTime = today.getTime();
+  const yesterdayTime = todayTime - 86400000;
+
+  let currentStreak = 0;
+  let bestStreak = 0;
+  let tempStreak = 1;
+
+  // Calculate current streak
+  let checkTime = todayTime;
+  if (activityDates.has(todayTime.toString())) {
+    currentStreak = 1;
+    checkTime = yesterdayTime;
+    while (activityDates.has(checkTime.toString())) {
+      currentStreak++;
+      checkTime -= 86400000;
+    }
+  } else if (activityDates.has(yesterdayTime.toString())) {
+    currentStreak = 1;
+    checkTime = yesterdayTime - 86400000;
+    while (activityDates.has(checkTime.toString())) {
+      currentStreak++;
+      checkTime -= 86400000;
+    }
+  }
+
+  // Calculate best streak
+  for (let i = 0; i < sortedDates.length - 1; i++) {
+    if (sortedDates[i] - sortedDates[i + 1] === 86400000) {
+      tempStreak++;
+    } else {
+      if (tempStreak > bestStreak) bestStreak = tempStreak;
+      tempStreak = 1;
+    }
+  }
+  if (tempStreak > bestStreak) bestStreak = tempStreak;
+  
+  // If only one day of activity, best is 1
+  if (sortedDates.length === 1) bestStreak = 1;
+
+  return { current: currentStreak, best: Math.max(bestStreak, currentStreak) };
 };
 
 // Helper to generate last 90 days for heatmap
@@ -95,9 +156,32 @@ export function Dashboard() {
   const { user } = useAuth();
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
+  const [targetFaction, setTargetFaction] = useState<string | null>(null);
+  const [targetArmy, setTargetArmy] = useState<{title: string, faction: string} | null>(null);
 
   useEffect(() => {
     if (!user) return;
+
+    // Fetch user settings for target faction
+    const fetchSettings = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          if (data.targetArmyId) {
+            const armyDoc = await getDoc(doc(db, 'armyLists', data.targetArmyId));
+            if (armyDoc.exists()) {
+              setTargetArmy({ title: armyDoc.data().title, faction: armyDoc.data().faction });
+            }
+          } else if (data.targetFaction) {
+            setTargetFaction(data.targetFaction);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching user settings:", err);
+      }
+    };
+    fetchSettings();
 
     const q = query(collection(db, 'collection'), where('uid', '==', user.uid));
     
@@ -121,8 +205,15 @@ export function Dashboard() {
   }
 
   const totalModels = models.reduce((acc, m) => acc + m.qty, 0);
-  const paintedCount = models.filter(m => ['Painted', 'Tabletop Ready'].includes(m.status)).reduce((acc, m) => acc + m.qty, 0);
-  const completionRate = totalModels > 0 ? Math.round((paintedCount / totalModels) * 100) : 0;
+  
+  // Calculate Combat Readiness based on target faction if set
+  const activeFaction = targetArmy ? targetArmy.faction : targetFaction;
+  const readinessModels = activeFaction ? models.filter(m => m.faction === activeFaction) : models;
+  const targetTotal = readinessModels.reduce((acc, m) => acc + m.qty, 0);
+  const paintedCount = readinessModels.filter(m => ['Painted', 'Tabletop Ready'].includes(m.status)).reduce((acc, m) => acc + m.qty, 0);
+  const completionRate = targetTotal > 0 ? Math.round((paintedCount / targetTotal) * 100) : 0;
+  
+  const streak = calculateStreak(models);
 
   const heatmapData = generateHeatmapData(models);
   const velocityData = generateVelocityData(models);
@@ -169,7 +260,7 @@ export function Dashboard() {
           value={totalModels} 
           subtitle="Miniatures logged"
           icon={Package} 
-          trend="+12 this month"
+          trend="Across all factions"
         />
         <MetricCard 
           title="Combat Readiness" 
@@ -177,15 +268,17 @@ export function Dashboard() {
           subtitle={`${paintedCount} fully painted`}
           icon={CheckCircle} 
           color="text-fuchsia-500"
-          trend="Target: 100%"
+          trend={targetArmy ? `Target: ${targetArmy.title}` : targetFaction ? `Target: ${targetFaction}` : "Target: Entire Collection"}
+          onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'settings' }))}
+          actionIcon={Settings}
         />
         <MetricCard 
           title="Hobby Streak" 
-          value="3 Days" 
+          value={`${streak.current} Days`} 
           subtitle="Consecutive activity"
           icon={Flame} 
           color="text-orange-500"
-          trend="Personal best: 14"
+          trend={`Personal best: ${streak.best}`}
         />
       </div>
 
@@ -212,8 +305,8 @@ export function Dashboard() {
                     <stop offset="95%" stopColor="#d946ef" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorAssembled" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#71717a" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#71717a" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
@@ -223,7 +316,7 @@ export function Dashboard() {
                   contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
                   itemStyle={{ color: '#fff' }}
                 />
-                <Area type="monotone" dataKey="assembled" name="WIP/Assembled" stroke="#71717a" fillOpacity={1} fill="url(#colorAssembled)" />
+                <Area type="monotone" dataKey="assembled" name="WIP/Assembled" stroke="#3b82f6" fillOpacity={1} fill="url(#colorAssembled)" />
                 <Area type="monotone" dataKey="completed" name="Painted" stroke="#d946ef" strokeWidth={2} fillOpacity={1} fill="url(#colorCompleted)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -274,6 +367,17 @@ export function Dashboard() {
               </div>
             )}
           </div>
+          {totalModels > 0 && (
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              {pieData.map((entry, index) => (
+                <div key={index} className="flex items-center text-xs text-zinc-400">
+                  <div className="w-3 h-3 rounded-full mr-2 flex-shrink-0" style={{ backgroundColor: entry.color }} />
+                  <span className="truncate">{entry.name}</span>
+                  <span className="ml-auto font-medium text-white">{entry.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
 
@@ -317,12 +421,13 @@ export function Dashboard() {
   );
 }
 
-function MetricCard({ title, value, subtitle, icon: Icon, color = "text-zinc-400", trend }: any) {
+function MetricCard({ title, value, subtitle, icon: Icon, color = "text-zinc-400", trend, onClick, actionIcon: ActionIcon }: any) {
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-sm relative overflow-hidden group"
+      onClick={onClick}
+      className={`bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-sm relative overflow-hidden group ${onClick ? 'cursor-pointer hover:border-zinc-700/80 transition-colors' : ''}`}
     >
       <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity duration-500 transform group-hover:scale-110 group-hover:rotate-12">
         <Icon className={`h-24 w-24 ${color}`} />
@@ -331,7 +436,12 @@ function MetricCard({ title, value, subtitle, icon: Icon, color = "text-zinc-400
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">{title}</h3>
-          <Icon className={`h-5 w-5 ${color}`} />
+          <div className="flex items-center space-x-2">
+            {ActionIcon && (
+              <ActionIcon className="h-4 w-4 text-zinc-500 hover:text-white transition-colors" />
+            )}
+            <Icon className={`h-5 w-5 ${color}`} />
+          </div>
         </div>
         <div className="flex items-baseline space-x-2">
           <p className="text-4xl font-bold text-white tracking-tight">{value}</p>

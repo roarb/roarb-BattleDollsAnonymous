@@ -1,10 +1,10 @@
 {
-  "projectId": "",
-  "appId": "",
-  "apiKey": "",
-  "authDomain": "",
-  "firestoreDatabaseId": "",
-  "storageBucket": "",
-  "messagingSenderId": "",
+  "projectId": "battle-dolls-anonymous",
+  "appId": "1:869907791699:web:97a44aa46b0b7501bceba6",
+  "apiKey": "AIzaSyAoHa4mCgAMZV55p6Zrh6nYihfBvpcZVjA",
+  "authDomain": "battle-dolls-anonymous.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-a5d5d405-77d7-48e2-a812-9a80a1802c6a",
+  "storageBucket": "battle-dolls-anonymous.firebasestorage.app",
+  "messagingSenderId": "869907791699",
   "measurementId": ""
 }
