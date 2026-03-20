@@ -1,0 +1,194 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId
+    // Fields:
+    //   - uid: string (required) - The user's unique identifier.
+    //   - email: string (required) - The user's email address.
+    //   - displayName: string (optional) - The user's display name.
+    //   - role: string (required) - The user's role.
+    //   - createdAt: timestamp (optional)
+    //
+    // Collection: collection
+    // Document ID: modelId
+    // Fields:
+    //   - uid: string (required) - The owner's user ID.
+    //   - modelName: string (required) - The name of the model or unit.
+    //   - qty: number (required) - The quantity of this model.
+    //   - status: string (required) - The current hobby status of the model.
+    //   - pointsPerModel: number (optional) - The points value per model.
+    //   - faction: string (required) - The faction or army this model belongs to.
+    //   - gameSystem: string (optional) - The game system this model belongs to.
+    //   - createdAt: timestamp (required)
+    //   - updatedAt: timestamp (required)
+    //
+    // Collection: projects
+    // Document ID: projectId
+    // Fields:
+    //   - uid: string (required) - The owner's user ID.
+    //   - title: string (required) - The title of the project.
+    //   - deadline: timestamp (optional) - The target completion date.
+    //   - targetPoints: number (optional) - The target points value for the project.
+    //   - createdAt: timestamp (required)
+    //   - updatedAt: timestamp (required)
+    //
+    // Collection: armyLists
+    // Document ID: listId
+    // Fields:
+    //   - uid: string (required) - The owner's user ID.
+    //   - title: string (required) - The title of the army list.
+    //   - pointsLimit: number (required) - The points limit for the list.
+    //   - faction: string (required) - The faction for the list.
+    //   - unitsJson: string (required) - A JSON string representing the units in the list.
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "rhoehn24@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'createdAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.email is string && isValidEmail(data.email) && data.email.size() < 150 &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100)) &&
+             data.role in ['admin', 'user'] &&
+             (!('createdAt' in data) || data.createdAt is timestamp);
+    }
+
+    function isValidMiniatureModel(data) {
+      return hasOnlyAllowedFields(['uid', 'modelName', 'qty', 'status', 'pointsPerModel', 'faction', 'gameSystem', 'createdAt', 'updatedAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.modelName is string && data.modelName.size() > 0 && data.modelName.size() < 100 &&
+             data.qty is number && data.qty >= 0 && data.qty <= 10000 &&
+             data.status in ['Unbuilt', 'Assembled', 'Primed', 'Painted', 'Tabletop Ready'] &&
+             (!('pointsPerModel' in data) || (data.pointsPerModel is number && data.pointsPerModel >= 0 && data.pointsPerModel <= 10000)) &&
+             data.faction is string && data.faction.size() > 0 && data.faction.size() < 100 &&
+             (!('gameSystem' in data) || (data.gameSystem is string && data.gameSystem.size() > 0 && data.gameSystem.size() < 100)) &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    function isValidHobbyProject(data) {
+      return hasOnlyAllowedFields(['uid', 'title', 'deadline', 'targetPoints', 'createdAt', 'updatedAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 150 &&
+             (!('deadline' in data) || data.deadline is timestamp) &&
+             (!('targetPoints' in data) || (data.targetPoints is number && data.targetPoints >= 0 && data.targetPoints <= 100000)) &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    function isValidArmyList(data) {
+      return hasOnlyAllowedFields(['uid', 'title', 'pointsLimit', 'faction', 'unitsJson', 'createdAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 150 &&
+             data.pointsLimit is number && data.pointsLimit >= 0 && data.pointsLimit <= 100000 &&
+             data.faction is string && data.faction.size() > 0 && data.faction.size() < 100 &&
+             data.unitsJson is string && data.unitsJson.size() < 100000 && // Allowing up to ~100KB for JSON
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() &&
+                    isValidUser(request.resource.data) &&
+                    isOwner(userId) &&
+                    uidUnchanged() &&
+                    ((request.resource.data.role == 'user') || isAdmin());
+      allow update: if isAuthenticated() &&
+                    isValidUser(request.resource.data) &&
+                    isOwner(userId) &&
+                    uidNotModified() &&
+                    ((request.resource.data.role == resource.data.role) || isAdmin()) &&
+                    (!('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+      allow delete: if isAdmin();
+    }
+
+    match /collection/{modelId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() &&
+                    isValidMiniatureModel(request.resource.data) &&
+                    uidUnchanged();
+      allow update: if isDocOwner() &&
+                    isValidMiniatureModel(request.resource.data) &&
+                    uidNotModified() &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner() || isAdmin();
+    }
+
+    match /projects/{projectId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() &&
+                    isValidHobbyProject(request.resource.data) &&
+                    uidUnchanged();
+      allow update: if isDocOwner() &&
+                    isValidHobbyProject(request.resource.data) &&
+                    uidNotModified() &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner() || isAdmin();
+    }
+
+    match /armyLists/{listId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() &&
+                    isValidArmyList(request.resource.data) &&
+                    uidUnchanged();
+      allow update: if isDocOwner() &&
+                    isValidArmyList(request.resource.data) &&
+                    uidNotModified() &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner() || isAdmin();
+    }
+  }
+}
