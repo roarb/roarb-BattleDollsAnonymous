@@ -157,6 +157,16 @@ service cloud.firestore {
              data.updatedAt is timestamp;
     }
 
+    function isValidRelapseRecord(data) {
+      return hasOnlyAllowedFields(['uid', 'msrp', 'boxName', 'reason', 'createdAt', 'updatedAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.msrp is number && data.msrp >= 0 && data.msrp <= 100000 &&
+             data.boxName is string && data.boxName.size() > 0 && data.boxName.size() < 150 &&
+             data.reason is string && data.reason.size() > 0 && data.reason.size() < 300 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -220,6 +230,18 @@ service cloud.firestore {
                     uidUnchanged();
       allow update: if isDocOwner() &&
                     isValidGameRecord(request.resource.data) &&
+                    uidNotModified() &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner() || isAdmin();
+    }
+
+    match /relapses/{relapseId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() &&
+                    isValidRelapseRecord(request.resource.data) &&
+                    uidUnchanged();
+      allow update: if isDocOwner() &&
+                    isValidRelapseRecord(request.resource.data) &&
                     uidNotModified() &&
                     request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if isDocOwner() || isAdmin();

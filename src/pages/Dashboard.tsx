@@ -20,7 +20,7 @@ const STATUS_COLORS = {
   'Unbuilt': '#52525b', // zinc-600
   'Assembled': '#3b82f6', // blue-500
   'Primed': '#eab308', // yellow-500
-  'Painted': '#d946ef', // fuchsia-500
+  'Painted': '#d946ef', // blue-500
   'Tabletop Ready': '#10b981', // emerald-500
 };
 
@@ -159,6 +159,10 @@ export function Dashboard() {
   const [targetFaction, setTargetFaction] = useState<string | null>(null);
   const [targetArmy, setTargetArmy] = useState<{title: string, faction: string} | null>(null);
   const [games, setGames] = useState<any[]>([]);
+  const [relapses, setRelapses] = useState<any[]>([]);
+  const [isRelapseModalOpen, setIsRelapseModalOpen] = useState(false);
+  const [relapseFormData, setRelapseFormData] = useState({ msrp: '', boxName: '', reason: '' });
+  const [savingRelapse, setSavingRelapse] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -203,17 +207,51 @@ export function Dashboard() {
         fetchedGames.push({ id: doc.id, ...doc.data() });
       });
       setGames(fetchedGames);
-      setLoading(false);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'gameLogs');
+    });
+
+    const qRelapses = query(collection(db, 'relapses'), where('uid', '==', user.uid));
+    const unsubscribeRelapses = onSnapshot(qRelapses, (snapshot) => {
+      const fetchedRelapses: any[] = [];
+      snapshot.forEach((doc) => {
+        fetchedRelapses.push({ id: doc.id, ...doc.data() });
+      });
+      setRelapses(fetchedRelapses);
+      setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'relapses');
       setLoading(false);
     });
 
-    return () => { unsubscribe(); unsubscribeGames(); };
+    return () => { unsubscribe(); unsubscribeGames(); unsubscribeRelapses(); };
   }, [user]);
 
+  const handleSaveRelapse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setSavingRelapse(true);
+    try {
+      const { serverTimestamp, addDoc, collection } = await import('firebase/firestore');
+      await addDoc(collection(db, 'relapses'), {
+        uid: user.uid,
+        msrp: Number(relapseFormData.msrp),
+        boxName: relapseFormData.boxName,
+        reason: relapseFormData.reason,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      setIsRelapseModalOpen(false);
+      setRelapseFormData({ msrp: '', boxName: '', reason: '' });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'relapses');
+    } finally {
+      setSavingRelapse(false);
+    }
+  };
+
   if (loading) {
-    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fuchsia-500"></div></div>;
+    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>;
   }
 
   const totalModels = models.reduce((acc, m) => acc + m.qty, 0);
@@ -232,6 +270,13 @@ export function Dashboard() {
   
   const streak = calculateStreak(models);
 
+  // Recovery Savings
+  const paintedCountForSavings = models.filter(m => ['Painted', 'Tabletop Ready'].includes(m.status)).reduce((acc, m) => acc + m.qty, 0);
+  const estimatedSavingsPerPaintedModel = 45; // ~ $45 MSRP per model set on average painted
+  const totalRelapseSpent = relapses.reduce((acc, r) => acc + (Number(r.msrp) || 0), 0);
+  const recoverySavingsRaw = (paintedCountForSavings * estimatedSavingsPerPaintedModel) - totalRelapseSpent;
+  const recoverySavings = recoverySavingsRaw > 0 ? recoverySavingsRaw : 0;
+
   const heatmapData = generateHeatmapData(models);
   const velocityData = generateVelocityData(models);
 
@@ -245,10 +290,10 @@ export function Dashboard() {
 
   const getHeatmapColor = (count: number) => {
     if (count === 0) return 'bg-zinc-900 border-zinc-800';
-    if (count < 3) return 'bg-fuchsia-900/40 border-fuchsia-900/50';
-    if (count < 7) return 'bg-fuchsia-700/60 border-fuchsia-700/50';
-    if (count < 15) return 'bg-fuchsia-500 border-fuchsia-400';
-    return 'bg-fuchsia-400 border-fuchsia-300 shadow-[0_0_10px_rgba(232,121,249,0.5)]';
+    if (count < 3) return 'bg-blue-900/40 border-blue-900/50';
+    if (count < 7) return 'bg-blue-700/60 border-blue-700/50';
+    if (count < 15) return 'bg-blue-500 border-blue-400';
+    return 'bg-blue-400 border-blue-300 shadow-[0_0_10px_rgba(232,121,249,0.5)]';
   };
 
   return (
@@ -256,22 +301,31 @@ export function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-            <Activity className="mr-3 h-8 w-8 text-fuchsia-500" />
-            Command Center
+            <Activity className="mr-3 h-8 w-8 text-blue-500" />
+            The Daily Accountability Dashboard
           </h1>
           <p className="text-zinc-400 mt-1">Track your plastic crack addiction with performance metrics and collection telemetry.</p>
         </div>
-        <button
-          onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'army-builder' }))}
-          className="inline-flex items-center px-5 py-2.5 border border-fuchsia-500/30 rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-fuchsia-600/10 hover:bg-fuchsia-600/20 hover:border-fuchsia-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-zinc-950 transition-all duration-300"
-        >
-          <Shield className="-ml-1 mr-2 h-5 w-5 text-fuchsia-400" />
-          Deploy Forces
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setIsRelapseModalOpen(true)}
+            className="inline-flex items-center px-5 py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/30 hover:border-red-500/50 rounded-lg text-sm font-medium transition-all duration-300"
+          >
+            <Flame className="-ml-1 mr-2 h-5 w-5" />
+            Log a Relapse
+          </button>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'army-builder' }))}
+            className="inline-flex items-center px-5 py-2.5 border border-blue-500/30 rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-blue-600/10 hover:bg-blue-600/20 hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-950 transition-all duration-300"
+          >
+            <Shield className="-ml-1 mr-2 h-5 w-5 text-blue-400" />
+            Deploy Forces
+          </button>
+        </div>
       </div>
 
       {/* Top Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <MetricCard 
           title="Total Assets" 
           value={totalModels} 
@@ -284,7 +338,7 @@ export function Dashboard() {
           value={`${completionRate}%`} 
           subtitle={`${paintedCount} fully painted`}
           icon={CheckCircle} 
-          color="text-fuchsia-500"
+          color="text-blue-500"
           trend={targetArmy ? `Target: ${targetArmy.title}` : targetFaction ? `Target: ${targetFaction}` : "Target: Entire Collection"}
           onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'settings' }))}
           actionIcon={Settings}
@@ -297,6 +351,14 @@ export function Dashboard() {
           color="text-indigo-500"
           trend="Recorded matches"
           onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'matches' }))}
+        />
+        <MetricCard 
+          title="Recovery Savings" 
+          value={`$${recoverySavings.toLocaleString()}`} 
+          subtitle={`-$${totalRelapseSpent.toLocaleString()} spent on relapses`}
+          icon={TrendingUp} 
+          color="text-emerald-500"
+          trend="Est. value of painted models"
         />
         <MetricCard 
           title="Hobby Streak" 
@@ -317,7 +379,7 @@ export function Dashboard() {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-medium text-white flex items-center">
-              <TrendingUp className="mr-2 h-5 w-5 text-fuchsia-500" />
+              <TrendingUp className="mr-2 h-5 w-5 text-blue-500" />
               Hobby Velocity
             </h2>
             <span className="text-xs font-medium px-2.5 py-1 bg-zinc-800 text-zinc-300 rounded-full border border-zinc-700">Last 6 Months</span>
@@ -420,10 +482,10 @@ export function Dashboard() {
             <span>Less</span>
             <div className="flex space-x-1">
               <div className="w-3 h-3 rounded-sm bg-zinc-900 border border-zinc-800"></div>
-              <div className="w-3 h-3 rounded-sm bg-fuchsia-900/40 border border-fuchsia-900/50"></div>
-              <div className="w-3 h-3 rounded-sm bg-fuchsia-700/60 border border-fuchsia-700/50"></div>
-              <div className="w-3 h-3 rounded-sm bg-fuchsia-500 border border-fuchsia-400"></div>
-              <div className="w-3 h-3 rounded-sm bg-fuchsia-400 border border-fuchsia-300 shadow-[0_0_5px_rgba(232,121,249,0.5)]"></div>
+              <div className="w-3 h-3 rounded-sm bg-blue-900/40 border border-blue-900/50"></div>
+              <div className="w-3 h-3 rounded-sm bg-blue-700/60 border border-blue-700/50"></div>
+              <div className="w-3 h-3 rounded-sm bg-blue-500 border border-blue-400"></div>
+              <div className="w-3 h-3 rounded-sm bg-blue-400 border border-blue-300 shadow-[0_0_5px_rgba(232,121,249,0.5)]"></div>
             </div>
             <span>More</span>
           </div>
@@ -443,6 +505,81 @@ export function Dashboard() {
           </div>
         </div>
       </motion.div>
+
+      {/* Relapse Modal */}
+      {isRelapseModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-zinc-950 border border-red-900/50 rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <h2 className="text-2xl font-bold text-red-500 mb-2 flex items-center">
+              <Flame className="w-6 h-6 mr-2" />
+              Log a Relapse
+            </h2>
+            <p className="text-zinc-400 text-sm mb-6">Confess your plastic crack sins. This cuts into your Recovery Savings.</p>
+            
+            <form onSubmit={handleSaveRelapse} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Street Value (MSRP $)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">$</span>
+                  <input 
+                    type="number" min="0" required 
+                    value={relapseFormData.msrp} 
+                    onChange={e => setRelapseFormData({...relapseFormData, msrp: e.target.value})}
+                    placeholder="e.g. 60"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 pl-8 text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">What did you buy?</label>
+                <input 
+                  type="text" required 
+                  value={relapseFormData.boxName} 
+                  onChange={e => setRelapseFormData({...relapseFormData, boxName: e.target.value})}
+                  placeholder="e.g. Combat Patrol: Tyranids"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Reason for Lapse</label>
+                <select
+                  required
+                  value={relapseFormData.reason}
+                  onChange={e => setRelapseFormData({...relapseFormData, reason: e.target.value})}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                >
+                  <option value="">Select an excuse...</option>
+                  <option value="The sculpts were too cool">The sculpts were too cool</option>
+                  <option value="It was a limited run">It was a limited run / FOMO</option>
+                  <option value="I have no self-control">I literally have no self-control</option>
+                  <option value="Needed for my list">Needed it for a tournament list</option>
+                  <option value="Good deal">It was a really good deal</option>
+                  <option value="Other">Other...</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-6 mt-6 border-t border-zinc-800">
+                <button 
+                  type="button" 
+                  onClick={() => setIsRelapseModalOpen(false)} 
+                  className="px-4 py-2 border border-zinc-700 bg-zinc-800 rounded-lg text-white hover:bg-zinc-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={savingRelapse} 
+                  className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white disabled:opacity-50 transition-colors font-medium"
+                >
+                  {savingRelapse ? 'Confessing...' : 'Log Relapse'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

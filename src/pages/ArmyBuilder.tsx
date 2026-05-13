@@ -181,7 +181,7 @@ Please format the output as a clean Markdown document with:
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.5)]"></div></div>;
+    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 shadow-[0_0_15px_rgba(217,70,239,0.5)]"></div></div>;
   }
 
   return (
@@ -189,8 +189,8 @@ Please format the output as a clean Markdown document with:
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-            <Shield className="mr-3 h-8 w-8 text-fuchsia-500" />
-            AI Army Strategist
+            <Shield className="mr-3 h-8 w-8 text-blue-500" />
+            The AI-Powered Relapse Strategist
           </h1>
           <p className="text-zinc-400 mt-1">Generate optimal deployment lists from your available assets.</p>
         </div>
@@ -204,7 +204,7 @@ Please format the output as a clean Markdown document with:
         >
           <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-sm shadow-sm">
             <h2 className="text-lg font-medium text-white mb-6 flex items-center">
-              <Activity className="mr-2 h-5 w-5 text-fuchsia-500" />
+              <Activity className="mr-2 h-5 w-5 text-blue-500" />
               Mission Parameters
             </h2>
             
@@ -216,7 +216,7 @@ Please format the output as a clean Markdown document with:
                   value={targetPoints}
                   onChange={(e) => setTargetPoints(parseInt(e.target.value) || 0)}
                   step="50"
-                  className="block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                  className="block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                 />
               </div>
 
@@ -226,7 +226,7 @@ Please format the output as a clean Markdown document with:
                   <select
                     value={selectedGameSystem}
                     onChange={(e) => setSelectedGameSystem(e.target.value)}
-                    className="block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors appearance-none"
+                    className="block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors appearance-none"
                   >
                     {gameSystems.map(sys => (
                       <option key={sys} value={sys}>{sys}</option>
@@ -243,7 +243,7 @@ Please format the output as a clean Markdown document with:
                   <select
                     value={selectedFaction}
                     onChange={(e) => setSelectedFaction(e.target.value)}
-                    className="block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors appearance-none"
+                    className="block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors appearance-none"
                   >
                     {factions.map(f => (
                       <option key={f} value={f}>{f}</option>
@@ -257,12 +257,12 @@ Please format the output as a clean Markdown document with:
               <button
                 onClick={generateArmyList}
                 disabled={generating || factions.length === 0}
-                className="w-full flex justify-center py-3 px-4 border border-fuchsia-500/30 rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-fuchsia-600/10 hover:bg-fuchsia-600/20 hover:border-fuchsia-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-zinc-950 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed items-center mt-8"
+                className="w-full flex justify-center py-3 px-4 border border-blue-500/30 rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-blue-600/10 hover:bg-blue-600/20 hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-950 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed items-center mt-8"
               >
                 {generating ? (
-                  <><Loader2 className="animate-spin mr-2 h-5 w-5 text-fuchsia-400" /> <span className="text-fuchsia-100">Strategizing...</span></>
+                  <><Loader2 className="animate-spin mr-2 h-5 w-5 text-blue-400" /> <span className="text-blue-100">Strategizing...</span></>
                 ) : (
-                  <><Sparkles className="mr-2 h-5 w-5 text-fuchsia-400" /> <span className="text-fuchsia-100">Generate List</span></>
+                  <><Sparkles className="mr-2 h-5 w-5 text-blue-400" /> <span className="text-blue-100">Generate List</span></>
                 )}
               </button>
             </div>
@@ -277,7 +277,7 @@ Please format the output as a clean Markdown document with:
                   .map(m => (
                     <div key={m.id} className="flex justify-between text-sm items-center border-b border-zinc-800/50 pb-2 last:border-0 last:pb-0">
                       <span className="text-zinc-300 font-medium">{m.qty}x {m.modelName} <span className="text-xs text-zinc-500 font-normal ml-1">({m.status})</span></span>
-                      <span className="text-fuchsia-400/80 font-mono text-xs">{m.pointsPerModel ? m.pointsPerModel * m.qty : '?'} pts</span>
+                      <span className="text-blue-400/80 font-mono text-xs">{m.pointsPerModel ? m.pointsPerModel * m.qty : '?'} pts</span>
                     </div>
                   ))
               ) : (
@@ -294,24 +294,24 @@ Please format the output as a clean Markdown document with:
         >
           <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-sm shadow-sm min-h-[600px] flex flex-col relative overflow-hidden">
             {/* Decorative background elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-fuchsia-900/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-900/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
             
             <div className="flex justify-between items-center mb-6 border-b border-zinc-800/80 pb-4 relative z-10">
               <h2 className="text-lg font-medium text-white flex items-center">
-                <Shield className="mr-2 h-5 w-5 text-fuchsia-500" />
+                <Shield className="mr-2 h-5 w-5 text-blue-500" />
                 Strategic Output
               </h2>
               {armyList && (
                 <div className="flex space-x-2">
                   <button 
                     onClick={() => setIsEditingList(!isEditingList)}
-                    className="text-zinc-400 hover:text-fuchsia-400 transition-colors flex items-center text-sm font-medium px-3 py-1.5 rounded-md hover:bg-fuchsia-900/20"
+                    className="text-zinc-400 hover:text-blue-400 transition-colors flex items-center text-sm font-medium px-3 py-1.5 rounded-md hover:bg-blue-900/20"
                   >
                     {isEditingList ? <><Check className="h-4 w-4 mr-1.5" /> Done Editing</> : <><Edit2 className="h-4 w-4 mr-1.5" /> Edit List</>}
                   </button>
                   <button 
                     onClick={() => setIsSaveModalOpen(true)}
-                    className="text-zinc-400 hover:text-fuchsia-400 transition-colors flex items-center text-sm font-medium px-3 py-1.5 rounded-md hover:bg-fuchsia-900/20"
+                    className="text-zinc-400 hover:text-blue-400 transition-colors flex items-center text-sm font-medium px-3 py-1.5 rounded-md hover:bg-blue-900/20"
                   >
                     <Save className="h-4 w-4 mr-1.5" /> Save List
                   </button>
@@ -319,7 +319,7 @@ Please format the output as a clean Markdown document with:
               )}
             </div>
             
-            <div className="flex-1 overflow-y-auto prose prose-invert prose-fuchsia max-w-none relative z-10 custom-scrollbar pr-2">
+            <div className="flex-1 overflow-y-auto prose prose-invert prose-blue max-w-none relative z-10 custom-scrollbar pr-2">
               {error ? (
                 <div className="text-red-400 p-4 bg-red-950/30 rounded-lg border border-red-900/50 flex items-start">
                   <Activity className="h-5 w-5 mr-3 mt-0.5 flex-shrink-0" />
@@ -330,7 +330,7 @@ Please format the output as a clean Markdown document with:
                   <textarea
                     value={editedList}
                     onChange={(e) => setEditedList(e.target.value)}
-                    className="w-full h-full min-h-[400px] bg-zinc-950/50 border border-zinc-800/50 rounded-xl p-6 text-zinc-300 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 transition-colors resize-none"
+                    className="w-full h-full min-h-[400px] bg-zinc-950/50 border border-zinc-800/50 rounded-xl p-6 text-zinc-300 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
                   />
                 ) : (
                   <div className="markdown-body text-zinc-300 bg-zinc-950/30 p-6 rounded-xl border border-zinc-800/50">
@@ -341,7 +341,7 @@ Please format the output as a clean Markdown document with:
                 <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-6 opacity-60">
                   <div className="relative">
                     <Shield className="h-24 w-24 text-zinc-700" />
-                    <Activity className="h-8 w-8 text-fuchsia-500/50 absolute bottom-0 right-0" />
+                    <Activity className="h-8 w-8 text-blue-500/50 absolute bottom-0 right-0" />
                   </div>
                   <p className="text-sm uppercase tracking-widest font-medium">Awaiting parameters to generate battle plan...</p>
                 </div>
@@ -363,7 +363,7 @@ Please format the output as a clean Markdown document with:
             >
               <div className="flex justify-between items-center p-6 border-b border-zinc-800">
                 <h3 className="text-lg font-medium text-white flex items-center">
-                  <Save className="mr-2 h-5 w-5 text-fuchsia-500" />
+                  <Save className="mr-2 h-5 w-5 text-blue-500" />
                   Save Army List
                 </h3>
                 <button
@@ -383,7 +383,7 @@ Please format the output as a clean Markdown document with:
                     required
                     value={saveForm.title}
                     onChange={(e) => setSaveForm({...saveForm, title: e.target.value})}
-                    className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                    className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                     placeholder="e.g., 1000pt Strike Force"
                   />
                 </div>
@@ -395,7 +395,7 @@ Please format the output as a clean Markdown document with:
                     rows={3}
                     value={saveForm.notes}
                     onChange={(e) => setSaveForm({...saveForm, notes: e.target.value})}
-                    className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors resize-none"
+                    className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors resize-none"
                     placeholder="e.g., Keep the warlord hidden until turn 3..."
                   />
                 </div>
@@ -411,7 +411,7 @@ Please format the output as a clean Markdown document with:
                   <button
                     type="submit"
                     disabled={saving || !saveForm.title}
-                    className="inline-flex justify-center px-4 py-2 border border-transparent rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-fuchsia-600 hover:bg-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-zinc-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed items-center"
+                    className="inline-flex justify-center px-4 py-2 border border-transparent rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed items-center"
                   >
                     {saving ? <Loader2 className="animate-spin h-4 w-4" /> : 'Save List'}
                   </button>

@@ -5,8 +5,8 @@ const BACKGROUNDS = [
     id: 'scifi-nebula',
     // Dark space nebula
     url: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=1920&auto=format&fit=crop',
-    // Shift towards purple/fuchsia to match the app's theme
-    style: { filter: 'blur(4px) brightness(0.5) contrast(1.2) hue-rotate(280deg)' } 
+    // Shift towards vibrant blue to match the app's theme
+    style: { filter: 'blur(4px) brightness(0.5) contrast(1.2) hue-rotate(180deg)' } 
   },
   {
     id: 'fantasy-fog',

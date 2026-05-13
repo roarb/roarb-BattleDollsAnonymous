@@ -159,7 +159,7 @@ export function Matches() {
         `Outcome: ${g.outcome}, Points: ${g.pointsFor || 0} to ${g.pointsAgainst || 0}, Opponent Faction: ${g.opponentFaction || 'Unknown'}, Notes: ${g.notes || 'None'}`
       ).join(' | ');
 
-      const prompt = `You are a Warhammer 40k/Fantasy miniature wargaming coach AI.
+      const prompt = `You are a universal miniature wargaming coach AI, supporting all systems like Warhammer 40k, Age of Sigmar, BattleTech, Star Wars: Legion and more.
 Here is the user's recent match history:
 ${gamesSummary}
 Provide a brief, encouraging 2-3 paragraph summary and some tactical advice based on their wins and losses.`;
@@ -181,7 +181,7 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fuchsia-500"></div></div>;
+    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>;
   }
 
   return (
@@ -189,8 +189,8 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-            <Swords className="mr-3 h-8 w-8 text-fuchsia-500" />
-            Battle Logs
+            <Swords className="mr-3 h-8 w-8 text-blue-500" />
+            Field Testimonies & After-Action Reports
           </h1>
           <p className="text-zinc-400 mt-1">Track your games, analyze your performance, and consult the AI Coach.</p>
         </div>
@@ -205,7 +205,7 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
           </button>
           <button
             onClick={() => handleOpenModal()}
-            className="inline-flex items-center px-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-sm font-medium rounded-lg shadow-sm border border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-zinc-950 transition-all"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg shadow-sm border border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-950 transition-all"
           >
             <Plus className="-ml-1 mr-2 h-4 w-4" />
             Log Matches
@@ -251,7 +251,7 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
                   {game.outcome}
                 </div>
                 <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => handleOpenModal(game)} className="p-1.5 text-zinc-400 hover:text-fuchsia-400"><Edit2 className="w-4 h-4" /></button>
+                  <button onClick={() => handleOpenModal(game)} className="p-1.5 text-zinc-400 hover:text-blue-400"><Edit2 className="w-4 h-4" /></button>
                   <button onClick={() => handleDelete(game.id)} className="p-1.5 text-zinc-400 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
@@ -261,7 +261,7 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
                 </h4>
                 {game.opponentName && <p className="text-zinc-400 text-sm">vs {game.opponentName} {game.opponentFaction ? `(${game.opponentFaction})` : ''}</p>}
               </div>
-              {game.mission && <div className="text-xs text-fuchsia-400 mb-2 font-medium bg-fuchsia-400/10 inline-block px-2 py-0.5 rounded">Mission: {game.mission}</div>}
+              {game.mission && <div className="text-xs text-blue-400 mb-2 font-medium bg-blue-400/10 inline-block px-2 py-0.5 rounded">Mission: {game.mission}</div>}
               {game.notes && <p className="text-zinc-500 text-sm line-clamp-3 mt-auto pt-2 border-t border-zinc-800/50">{game.notes}</p>}
             </motion.div>
           ))}
@@ -283,7 +283,7 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
                 <select 
                   value={armyListId} 
                   onChange={e => setArmyListId(e.target.value)} 
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-fuchsia-500"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">-- None Selected --</option>
                   {armies.map(a => <option key={a.id} value={a.id}>{a.title} ({a.faction})</option>)}
@@ -296,7 +296,7 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
                   <select 
                     value={outcome} 
                     onChange={e => setOutcome(e.target.value as any)} 
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-fuchsia-500"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     <option value="Win">Win</option>
                     <option value="Loss">Loss</option>
@@ -307,14 +307,14 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Your Points</label>
                   <input 
                     type="number" min="0" value={pointsFor} onChange={e => setPointsFor(e.target.value ? Number(e.target.value) : '')}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-fuchsia-500"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div className="col-span-3 sm:col-span-1">
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Opponent Pts</label>
                   <input 
                     type="number" min="0" value={pointsAgainst} onChange={e => setPointsAgainst(e.target.value ? Number(e.target.value) : '')}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-fuchsia-500"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -324,14 +324,14 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Opponent Name</label>
                   <input 
                     type="text" value={opponentName} onChange={e => setOpponentName(e.target.value)} placeholder="e.g. John D."
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-fuchsia-500"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Opp. Faction</label>
                   <input 
                     type="text" value={opponentFaction} onChange={e => setOpponentFaction(e.target.value)} placeholder="e.g. Tyranids"
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-fuchsia-500"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -340,7 +340,7 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
                 <label className="block text-sm font-medium text-zinc-400 mb-1">Mission / Scenario</label>
                 <input 
                   type="text" value={mission} onChange={e => setMission(e.target.value)} placeholder="e.g. Scorched Earth"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-fuchsia-500"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
@@ -348,13 +348,13 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
                 <label className="block text-sm font-medium text-zinc-400 mb-1">Notes / Summary</label>
                 <textarea 
                   value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Highlights, what worked, what failed..."
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-fuchsia-500"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border border-zinc-700 bg-zinc-800 rounded-lg text-white hover:bg-zinc-700">Cancel</button>
-                <button type="submit" disabled={saving} className="px-4 py-2 bg-fuchsia-600 rounded-lg text-white hover:bg-fuchsia-500 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 rounded-lg text-white hover:bg-blue-500 disabled:opacity-50">
                   {saving ? 'Saving...' : 'Save Record'}
                 </button>
               </div>

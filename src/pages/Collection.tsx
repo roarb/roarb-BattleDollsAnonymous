@@ -206,7 +206,7 @@ export function Collection() {
     : undefined;
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.5)]"></div></div>;
+    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 shadow-[0_0_15px_rgba(217,70,239,0.5)]"></div></div>;
   }
 
   return (
@@ -214,16 +214,16 @@ export function Collection() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-            <Database className="mr-3 h-8 w-8 text-fuchsia-500" />
-            Asset Database
+            <Database className="mr-3 h-8 w-8 text-blue-500" />
+            Full Disclosure: The Asset Vault
           </h1>
           <p className="text-zinc-400 mt-1">Manage and track your miniature collection.</p>
         </div>
         <button
           onClick={() => openModal()}
-          className="inline-flex items-center px-5 py-2.5 border border-fuchsia-500/30 rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-fuchsia-600/10 hover:bg-fuchsia-600/20 hover:border-fuchsia-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-zinc-950 transition-all duration-300"
+          className="inline-flex items-center px-5 py-2.5 border border-blue-500/30 rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-blue-600/10 hover:bg-blue-600/20 hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-950 transition-all duration-300"
         >
-          <Plus className="-ml-1 mr-2 h-5 w-5 text-fuchsia-400" />
+          <Plus className="-ml-1 mr-2 h-5 w-5 text-blue-400" />
           Log New Asset
         </button>
       </div>
@@ -238,7 +238,7 @@ export function Collection() {
             placeholder="Search assets or factions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2.5 border border-zinc-700/50 rounded-lg leading-5 bg-zinc-950 text-zinc-300 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm transition-colors"
+            className="block w-full pl-10 pr-3 py-2.5 border border-zinc-700/50 rounded-lg leading-5 bg-zinc-950 text-zinc-300 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
           />
         </div>
         <div className="relative w-full sm:w-64">
@@ -248,7 +248,7 @@ export function Collection() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2.5 border border-zinc-700/50 rounded-lg leading-5 bg-zinc-950 text-zinc-300 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm transition-colors appearance-none"
+            className="block w-full pl-10 pr-3 py-2.5 border border-zinc-700/50 rounded-lg leading-5 bg-zinc-950 text-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors appearance-none"
           >
             <option value="All">All Statuses</option>
             {STATUS_OPTIONS.map(status => (
@@ -291,8 +291,8 @@ export function Collection() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400 font-mono">{model.qty}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-medium rounded-md border
-                        ${model.status === 'Tabletop Ready' ? 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20' : 
-                          model.status === 'Painted' ? 'bg-fuchsia-600/10 text-fuchsia-500 border-fuchsia-600/20' : 
+                        ${model.status === 'Tabletop Ready' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
+                          model.status === 'Painted' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' : 
                           model.status === 'Primed' ? 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' : 
                           model.status === 'Assembled' ? 'bg-zinc-600/10 text-zinc-300 border-zinc-600/20' : 
                           'bg-zinc-700/10 text-zinc-500 border-zinc-700/20'}`}>
@@ -301,7 +301,7 @@ export function Collection() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400 font-mono">{model.pointsPerModel ? model.pointsPerModel * model.qty : '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button onClick={() => openModal(model)} className="text-zinc-500 hover:text-fuchsia-400 mr-4 transition-colors">
+                      <button onClick={() => openModal(model)} className="text-zinc-500 hover:text-blue-400 mr-4 transition-colors">
                         <Edit2 className="h-4 w-4" />
                       </button>
                       <button onClick={() => handleDelete(model.id)} className="text-zinc-500 hover:text-red-400 transition-colors">
@@ -349,32 +349,35 @@ export function Collection() {
                     <div className="sm:flex sm:items-start">
                       <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
                         <h3 className="text-lg leading-6 font-medium text-white flex items-center" id="modal-title">
-                          <Database className="mr-2 h-5 w-5 text-fuchsia-500" />
+                          <Database className="mr-2 h-5 w-5 text-blue-500" />
                           {editingModel ? 'Edit Asset' : 'Log New Asset'}
                         </h3>
                         <div className="mt-6 space-y-5">
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label htmlFor="gameSystem" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Game System</label>
-                              <input
-                                type="text"
+                              <select
                                 name="gameSystem"
                                 id="gameSystem"
-                                list="gameSystems"
                                 required
                                 value={formData.gameSystem}
                                 onChange={(e) => setFormData({...formData, gameSystem: e.target.value})}
-                                className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
-                              />
-                              <datalist id="gameSystems">
-                                <option value="Warhammer 40k" />
-                                <option value="Age of Sigmar" />
-                                <option value="Kill Team" />
-                                <option value="Warcry" />
-                                <option value="The Old World" />
-                                <option value="Star Wars: Legion" />
-                                <option value="Marvel Crisis Protocol" />
-                              </datalist>
+                                className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                              >
+                                <option value="Warhammer 40k">Warhammer 40k</option>
+                                <option value="Age of Sigmar">Age of Sigmar</option>
+                                <option value="BattleTech">BattleTech</option>
+                                <option value="Star Wars: Legion">Star Wars: Legion</option>
+                                <option value="Infinity">Infinity</option>
+                                <option value="Firefight">Firefight</option>
+                                <option value="Conquest: The Last Argument of Kings">Conquest: The Last Argument of Kings</option>
+                                <option value="Saga: Age of Magic">Saga: Age of Magic</option>
+                                <option value="Frostgrave">Frostgrave</option>
+                                <option value="Warhammer: The Old World">Warhammer: The Old World</option>
+                                <option value="Kill Team">Kill Team</option>
+                                <option value="Warcry">Warcry</option>
+                                <option value="Marvel Crisis Protocol">Marvel Crisis Protocol</option>
+                              </select>
                             </div>
                             <div>
                               <label htmlFor="faction" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Faction</label>
@@ -386,7 +389,7 @@ export function Collection() {
                                 required
                                 value={formData.faction}
                                 onChange={(e) => setFormData({...formData, faction: e.target.value})}
-                                className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                                className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                               />
                               {formData.gameSystem === 'Warhammer 40k' && (
                                 <datalist id="40k-factions">
@@ -421,7 +424,7 @@ export function Collection() {
                                 
                                 setFormData({...formData, modelName: newModelName, qty: newQty, pointsPerModel: newPoints});
                               }}
-                              className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                              className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                             />
                             {selectedFactionData && (
                               <datalist id="40k-models">
@@ -440,7 +443,7 @@ export function Collection() {
                               placeholder="e.g. Purple Sash, Squad Alpha..."
                               value={formData.nickname}
                               onChange={(e) => setFormData({...formData, nickname: e.target.value})}
-                              className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                              className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                             />
                           </div>
                           {selectedModelData && selectedModelData.points.length > 0 && (
@@ -448,7 +451,7 @@ export function Collection() {
                               <label htmlFor="unitSelection" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Unit Size Selection</label>
                               <select
                                 id="unitSelection"
-                                className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                                className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                                 value={
                                   selectedModelData.points.some(p => p.qty === formData.qty && p.pts === formData.pointsPerModel * formData.qty)
                                     ? `${formData.qty}-${formData.pointsPerModel * formData.qty}`
@@ -482,7 +485,7 @@ export function Collection() {
                                 required
                                 value={formData.qty}
                                 onChange={(e) => setFormData({...formData, qty: parseInt(e.target.value) || 1})}
-                                className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                                className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                               />
                             </div>
                             <div>
@@ -494,7 +497,7 @@ export function Collection() {
                                 min="0"
                                 value={formData.pointsPerModel}
                                 onChange={(e) => setFormData({...formData, pointsPerModel: parseInt(e.target.value) || 0})}
-                                className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                                className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                               />
                             </div>
                           </div>
@@ -505,7 +508,7 @@ export function Collection() {
                               name="status"
                               value={formData.status}
                               onChange={(e) => setFormData({...formData, status: e.target.value})}
-                              className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                              className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                             >
                               {STATUS_OPTIONS.map(status => (
                                 <option key={status} value={status}>{status}</option>
@@ -519,14 +522,14 @@ export function Collection() {
                   <div className="bg-zinc-950/50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse border-t border-zinc-800/80">
                     <button
                       type="submit"
-                      className="w-full inline-flex justify-center rounded-lg border border-fuchsia-500/30 shadow-[0_0_10px_rgba(217,70,239,0.1)] px-4 py-2 bg-fuchsia-600/10 text-base font-medium text-white hover:bg-fuchsia-600/20 hover:border-fuchsia-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-zinc-900 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300"
+                      className="w-full inline-flex justify-center rounded-lg border border-blue-500/30 shadow-[0_0_10px_rgba(217,70,239,0.1)] px-4 py-2 bg-blue-600/10 text-base font-medium text-white hover:bg-blue-600/20 hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-900 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300"
                     >
                       {editingModel ? 'Save Changes' : 'Log Asset'}
                     </button>
                     <button
                       type="button"
                       onClick={closeModal}
-                      className="mt-3 w-full inline-flex justify-center rounded-lg border border-zinc-700/50 shadow-sm px-4 py-2 bg-zinc-900 text-base font-medium text-zinc-300 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-zinc-900 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
+                      className="mt-3 w-full inline-flex justify-center rounded-lg border border-zinc-700/50 shadow-sm px-4 py-2 bg-zinc-900 text-base font-medium text-zinc-300 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-900 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
                     >
                       Cancel
                     </button>

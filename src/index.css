@@ -36,7 +36,7 @@ body {
 .markdown-body ol { @apply list-decimal pl-5 mb-4 space-y-1; }
 .markdown-body li { @apply mb-1; }
 .markdown-body strong { @apply font-semibold text-white; }
-.markdown-body blockquote { @apply border-l-4 border-fuchsia-500 pl-4 italic text-zinc-400 my-4; }
-.markdown-body code { @apply bg-zinc-800 px-1.5 py-0.5 rounded text-sm font-mono text-fuchsia-400; }
+.markdown-body blockquote { @apply border-l-4 border-blue-500 pl-4 italic text-zinc-400 my-4; }
+.markdown-body code { @apply bg-zinc-800 px-1.5 py-0.5 rounded text-sm font-mono text-blue-400; }
 .markdown-body pre { @apply bg-zinc-900 border border-zinc-800 p-4 rounded-lg overflow-x-auto mb-4; }
 .markdown-body pre code { @apply bg-transparent p-0 text-zinc-300; }

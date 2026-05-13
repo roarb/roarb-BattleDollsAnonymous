@@ -7,7 +7,7 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
 
   const navItems = [
     { name: 'Dashboard', path: 'dashboard', icon: LayoutDashboard },
-    { name: 'Collection', path: 'collection', icon: Package },
+    { name: 'The Stash', path: 'collection', icon: Package },
     { name: 'Army Builder', path: 'army-builder', icon: Shield },
     { name: 'Saved Armies', path: 'armies', icon: Swords },
     { name: 'Battle Logs', path: 'matches', icon: History },
@@ -19,8 +19,8 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center flex-shrink-0">
-            <Shield className="h-8 w-8 text-fuchsia-500" />
-            <span className="hidden lg:block ml-2 text-xl font-bold text-white tracking-tight">Battle Dolls Anonymous</span>
+            <Shield className="h-8 w-8 text-blue-500" />
+            <span className="hidden lg:block ml-2 text-xl font-bold text-white tracking-tight">War Dollies Anonymous</span>
           </div>
           
           <div className="flex flex-1 justify-center md:justify-start md:ml-8 space-x-2 sm:space-x-6">
@@ -33,7 +33,7 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
                   onClick={() => onNavigate(item.path)}
                   className={`${
                     isActive
-                      ? 'border-fuchsia-500 text-white'
+                      ? 'border-blue-500 text-white'
                       : 'border-transparent text-zinc-400 hover:border-zinc-300 hover:text-zinc-200'
                   } inline-flex items-center px-2 md:px-1 pt-1 border-b-2 text-sm font-medium transition-colors`}
                   title={item.name}

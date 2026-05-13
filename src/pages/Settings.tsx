@@ -96,15 +96,15 @@ export function Settings() {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.5)]"></div></div>;
+    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 shadow-[0_0_15px_rgba(217,70,239,0.5)]"></div></div>;
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 pb-12">
       <div className="border-b border-zinc-800 pb-6">
         <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-          <SettingsIcon className="mr-3 h-8 w-8 text-fuchsia-500" />
-          Personal Settings
+          <SettingsIcon className="mr-3 h-8 w-8 text-blue-500" />
+          Member Intake & Personal Protocols
         </h1>
         <p className="text-zinc-400 mt-1">Configure your dashboard metrics and personal preferences.</p>
       </div>
@@ -117,7 +117,7 @@ export function Settings() {
         <form onSubmit={handleSave} className="space-y-6">
           <div>
             <h2 className="text-xl font-semibold text-white flex items-center mb-4">
-              <Target className="mr-2 h-5 w-5 text-fuchsia-400" />
+              <Target className="mr-2 h-5 w-5 text-blue-400" />
               Combat Readiness Target
             </h2>
             <p className="text-sm text-zinc-400 mb-4">
@@ -133,7 +133,7 @@ export function Settings() {
                 id="targetSelection"
                 value={targetSelection}
                 onChange={(e) => setTargetSelection(e.target.value)}
-                className="block w-full bg-zinc-950 border border-zinc-800 rounded-lg shadow-sm py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent sm:text-sm transition-shadow"
+                className="block w-full bg-zinc-950 border border-zinc-800 rounded-lg shadow-sm py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm transition-shadow"
               >
                 <option value="none">Entire Collection (Default)</option>
                 {availableArmies.length > 0 && (
@@ -165,7 +165,7 @@ export function Settings() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-fuchsia-600 hover:bg-fuchsia-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-zinc-950 transition-all disabled:opacity-50"
+              className="inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-950 transition-all disabled:opacity-50"
             >
               {saving ? <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" /> : <Save className="-ml-1 mr-2 h-4 w-4" />}
               Save Settings

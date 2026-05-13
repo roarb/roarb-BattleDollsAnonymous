@@ -212,6 +212,20 @@
         }
       },
       "required": ["uid", "outcome", "createdAt", "updatedAt"]
+    },
+    "RelapseRecord": {
+      "title": "Relapse Record",
+      "description": "Tracks purchases and spending on new boxes.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "msrp": { "type": "number", "description": "Money spent" },
+        "boxName": { "type": "string", "description": "The item bought" },
+        "reason": { "type": "string", "description": "Reason for lapse" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "msrp", "boxName", "reason", "createdAt", "updatedAt"]
     }
   },
   "firestore": {
@@ -234,6 +248,10 @@
     "/gameLogs/{logId}": {
       "schema": { "$ref": "GameRecord" },
       "description": "Stores game logs and match results."
+    },
+    "/relapses/{relapseId}": {
+      "schema": { "$ref": "RelapseRecord" },
+      "description": "Stores relapse records (purchases)."
     }
   }
 }

@@ -14,6 +14,7 @@ import { Matches } from './pages/Matches';
 import { Settings } from './pages/Settings';
 import { Navbar } from './components/layout/Navbar';
 import { Background } from './components/layout/Background';
+import { Footer } from './components/layout/Footer';
 
 function AuthenticatedApp() {
   const { user } = useAuth();
@@ -59,11 +60,12 @@ function AuthenticatedApp() {
   return (
     <>
       <Background />
-      <div className="min-h-screen bg-zinc-950/20 text-zinc-50 font-sans selection:bg-fuchsia-500/30">
+      <div className="min-h-screen flex flex-col bg-zinc-950/20 text-zinc-50 font-sans selection:bg-blue-500/30">
         <Navbar currentPath={currentPath} onNavigate={setCurrentPath} />
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 relative z-10">
+        <main className="flex-1 w-full max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 relative z-10">
           {renderPage()}
         </main>
+        <Footer />
       </div>
     </>
   );

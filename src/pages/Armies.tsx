@@ -105,7 +105,7 @@ export function Armies() {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.5)]"></div></div>;
+    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 shadow-[0_0_15px_rgba(217,70,239,0.5)]"></div></div>;
   }
 
   return (
@@ -113,14 +113,14 @@ export function Armies() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-            <Shield className="mr-3 h-8 w-8 text-fuchsia-500" />
-            Saved Armies
+            <Shield className="mr-3 h-8 w-8 text-blue-500" />
+            Saved Strategic Blueprints & Intentions
           </h1>
           <p className="text-zinc-400 mt-1">Manage your battle-forged lists and strategic notes.</p>
         </div>
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'army-builder' }))}
-          className="inline-flex items-center px-5 py-2.5 border border-fuchsia-500/30 rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-fuchsia-600/10 hover:bg-fuchsia-600/20 hover:border-fuchsia-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-500 focus:ring-offset-zinc-950 transition-all duration-300"
+          className="inline-flex items-center px-5 py-2.5 border border-blue-500/30 rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-blue-600/10 hover:bg-blue-600/20 hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-950 transition-all duration-300"
         >
           Build New List
         </button>
@@ -133,7 +133,7 @@ export function Armies() {
           <p className="text-zinc-400 mb-6">Use the AI Army Strategist to generate and save your first list.</p>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'army-builder' }))}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-fuchsia-600 hover:bg-fuchsia-500 transition-colors"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors"
           >
             Go to Army Builder
           </button>
@@ -157,7 +157,7 @@ export function Armies() {
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
                       {army.faction}
                     </span>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-fuchsia-900/30 text-fuchsia-400 border border-fuchsia-800/50">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/30 text-blue-400 border border-blue-800/50">
                       {army.pointsLimit} pts
                     </span>
                   </div>
@@ -169,7 +169,7 @@ export function Armies() {
                 <div className="flex items-center space-x-2">
                   <button 
                     onClick={(e) => startEditing(army, e)}
-                    className="p-2 text-zinc-500 hover:text-fuchsia-400 transition-colors rounded-lg hover:bg-zinc-800"
+                    className="p-2 text-zinc-500 hover:text-blue-400 transition-colors rounded-lg hover:bg-zinc-800"
                     title="Edit Army"
                   >
                     <Edit2 className="h-4 w-4" />
@@ -204,7 +204,7 @@ export function Armies() {
                               type="text"
                               value={editForm.title}
                               onChange={(e) => setEditForm({...editForm, title: e.target.value})}
-                              className="block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-900 text-white"
+                              className="block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-900 text-white"
                             />
                           </div>
                           <div>
@@ -213,7 +213,7 @@ export function Armies() {
                               value={editForm.notes}
                               onChange={(e) => setEditForm({...editForm, notes: e.target.value})}
                               rows={3}
-                              className="block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-900 text-white resize-none"
+                              className="block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-900 text-white resize-none"
                             />
                           </div>
                           <div>
@@ -221,7 +221,7 @@ export function Armies() {
                             <textarea
                               value={editForm.content}
                               onChange={(e) => setEditForm({...editForm, content: e.target.value})}
-                              className="block w-full min-h-[300px] border border-zinc-700/50 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-900 text-white font-mono resize-y"
+                              className="block w-full min-h-[300px] border border-zinc-700/50 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-900 text-white font-mono resize-y"
                             />
                           </div>
                           <div className="flex justify-end space-x-3 pt-2">
@@ -234,7 +234,7 @@ export function Armies() {
                             <button
                               onClick={() => handleUpdate(army.id)}
                               disabled={saving || !editForm.title}
-                              className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-fuchsia-600 hover:bg-fuchsia-500 transition-all disabled:opacity-50"
+                              className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-all disabled:opacity-50"
                             >
                               {saving ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                               Save Changes
