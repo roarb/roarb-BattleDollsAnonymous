@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogOut, LayoutDashboard, Package, Shield, Swords, Settings } from 'lucide-react';
+import { LogOut, LayoutDashboard, Package, Shield, Swords, Settings, History } from 'lucide-react';
 
 export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNavigate: (path: string) => void }) {
   const { user, logout } = useAuth();
@@ -10,6 +10,7 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
     { name: 'Collection', path: 'collection', icon: Package },
     { name: 'Army Builder', path: 'army-builder', icon: Shield },
     { name: 'Saved Armies', path: 'armies', icon: Swords },
+    { name: 'Battle Logs', path: 'matches', icon: History },
     { name: 'Settings', path: 'settings', icon: Settings },
   ];
 

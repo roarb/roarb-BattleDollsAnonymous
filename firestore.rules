@@ -107,9 +107,10 @@ service cloud.firestore {
     }
 
     function isValidMiniatureModel(data) {
-      return hasOnlyAllowedFields(['uid', 'modelName', 'qty', 'status', 'pointsPerModel', 'faction', 'gameSystem', 'createdAt', 'updatedAt']) &&
+      return hasOnlyAllowedFields(['uid', 'modelName', 'nickname', 'qty', 'status', 'pointsPerModel', 'faction', 'gameSystem', 'createdAt', 'updatedAt']) &&
              data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
              data.modelName is string && data.modelName.size() > 0 && data.modelName.size() < 100 &&
+             (!('nickname' in data) || (data.nickname is string && data.nickname.size() < 100)) &&
              data.qty is number && data.qty >= 0 && data.qty <= 10000 &&
              data.status in ['Unbuilt', 'Assembled', 'Primed', 'Painted', 'Tabletop Ready'] &&
              (!('pointsPerModel' in data) || (data.pointsPerModel is number && data.pointsPerModel >= 0 && data.pointsPerModel <= 10000)) &&
@@ -136,6 +137,21 @@ service cloud.firestore {
              data.pointsLimit is number && data.pointsLimit >= 0 && data.pointsLimit <= 100000 &&
              data.faction is string && data.faction.size() > 0 && data.faction.size() < 100 &&
              data.content is string && data.content.size() < 100000 && // Allowing up to ~100KB for content
+             (!('notes' in data) || (data.notes is string && data.notes.size() < 10000)) &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    function isValidGameRecord(data) {
+      return hasOnlyAllowedFields(['uid', 'armyListId', 'outcome', 'pointsFor', 'pointsAgainst', 'opponentName', 'opponentFaction', 'mission', 'notes', 'createdAt', 'updatedAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             (!('armyListId' in data) || (data.armyListId is string && data.armyListId.size() < 100)) &&
+             data.outcome in ['Win', 'Loss', 'Draw'] &&
+             (!('pointsFor' in data) || (data.pointsFor is number && data.pointsFor >= 0 && data.pointsFor <= 100000)) &&
+             (!('pointsAgainst' in data) || (data.pointsAgainst is number && data.pointsAgainst >= 0 && data.pointsAgainst <= 100000)) &&
+             (!('opponentName' in data) || (data.opponentName is string && data.opponentName.size() < 100)) &&
+             (!('opponentFaction' in data) || (data.opponentFaction is string && data.opponentFaction.size() < 100)) &&
+             (!('mission' in data) || (data.mission is string && data.mission.size() < 150)) &&
              (!('notes' in data) || (data.notes is string && data.notes.size() < 10000)) &&
              data.createdAt is timestamp &&
              data.updatedAt is timestamp;
@@ -192,6 +208,18 @@ service cloud.firestore {
                     uidUnchanged();
       allow update: if isDocOwner() &&
                     isValidArmyList(request.resource.data) &&
+                    uidNotModified() &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner() || isAdmin();
+    }
+
+    match /gameLogs/{logId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() &&
+                    isValidGameRecord(request.resource.data) &&
+                    uidUnchanged();
+      allow update: if isDocOwner() &&
+                    isValidGameRecord(request.resource.data) &&
                     uidNotModified() &&
                     request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if isDocOwner() || isAdmin();

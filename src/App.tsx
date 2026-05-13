@@ -10,6 +10,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Collection } from './pages/Collection';
 import { ArmyBuilder } from './pages/ArmyBuilder';
 import { Armies } from './pages/Armies';
+import { Matches } from './pages/Matches';
 import { Settings } from './pages/Settings';
 import { Navbar } from './components/layout/Navbar';
 import { Background } from './components/layout/Background';
@@ -46,6 +47,8 @@ function AuthenticatedApp() {
         return <ArmyBuilder />;
       case 'armies':
         return <Armies />;
+      case 'matches':
+        return <Matches />;
       case 'settings':
         return <Settings />;
       default:

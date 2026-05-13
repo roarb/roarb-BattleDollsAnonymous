@@ -4,7 +4,7 @@ import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { motion } from 'motion/react';
-import { Package, CheckCircle, Activity, Flame, Shield, TrendingUp, Settings } from 'lucide-react';
+import { Package, CheckCircle, Activity, Flame, Shield, TrendingUp, Settings, Swords } from 'lucide-react';
 
 interface Model {
   id: string;
@@ -158,6 +158,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [targetFaction, setTargetFaction] = useState<string | null>(null);
   const [targetArmy, setTargetArmy] = useState<{title: string, faction: string} | null>(null);
+  const [games, setGames] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -191,13 +192,24 @@ export function Dashboard() {
         fetchedModels.push({ id: doc.id, ...doc.data() } as Model);
       });
       setModels(fetchedModels);
-      setLoading(false);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'collection');
+    });
+
+    const qGames = query(collection(db, 'gameLogs'), where('uid', '==', user.uid));
+    const unsubscribeGames = onSnapshot(qGames, (snapshot) => {
+      const fetchedGames: any[] = [];
+      snapshot.forEach((doc) => {
+        fetchedGames.push({ id: doc.id, ...doc.data() });
+      });
+      setGames(fetchedGames);
+      setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'gameLogs');
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => { unsubscribe(); unsubscribeGames(); };
   }, [user]);
 
   if (loading) {
@@ -212,6 +224,11 @@ export function Dashboard() {
   const targetTotal = readinessModels.reduce((acc, m) => acc + m.qty, 0);
   const paintedCount = readinessModels.filter(m => ['Painted', 'Tabletop Ready'].includes(m.status)).reduce((acc, m) => acc + m.qty, 0);
   const completionRate = targetTotal > 0 ? Math.round((paintedCount / targetTotal) * 100) : 0;
+  
+  // Calculate Games Stats
+  const totalGames = games.length;
+  const wins = games.filter(g => g.outcome === 'Win').length;
+  const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   
   const streak = calculateStreak(models);
 
@@ -254,7 +271,7 @@ export function Dashboard() {
       </div>
 
       {/* Top Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard 
           title="Total Assets" 
           value={totalModels} 
@@ -263,7 +280,7 @@ export function Dashboard() {
           trend="Across all factions"
         />
         <MetricCard 
-          title="Combat Readiness" 
+          title="Ready For War" 
           value={`${completionRate}%`} 
           subtitle={`${paintedCount} fully painted`}
           icon={CheckCircle} 
@@ -271,6 +288,15 @@ export function Dashboard() {
           trend={targetArmy ? `Target: ${targetArmy.title}` : targetFaction ? `Target: ${targetFaction}` : "Target: Entire Collection"}
           onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'settings' }))}
           actionIcon={Settings}
+        />
+        <MetricCard 
+          title="Win Rate" 
+          value={`${winRate}%`} 
+          subtitle={`${wins} Wins out of ${totalGames}`}
+          icon={Swords} 
+          color="text-indigo-500"
+          trend="Recorded matches"
+          onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'matches' }))}
         />
         <MetricCard 
           title="Hobby Streak" 

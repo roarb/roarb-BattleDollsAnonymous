@@ -51,6 +51,10 @@
           "type": "string",
           "description": "The name of the model or unit."
         },
+        "nickname": {
+          "type": "string",
+          "description": "An optional nickname or distinguishing description for the unit."
+        },
         "qty": {
           "type": "number",
           "description": "The quantity of this model."
@@ -155,6 +159,59 @@
         }
       },
       "required": ["uid", "title", "pointsLimit", "faction", "content", "createdAt", "updatedAt"]
+    },
+    "GameRecord": {
+      "title": "Game Record",
+      "description": "A tracked game/match result.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The owner's user ID."
+        },
+        "armyListId": {
+          "type": "string",
+          "description": "The ID of the army list used in this game."
+        },
+        "outcome": {
+          "type": "string",
+          "enum": ["Win", "Loss", "Draw"],
+          "description": "The outcome of the match."
+        },
+        "pointsFor": {
+          "type": "number",
+          "description": "Control points scored by the user."
+        },
+        "pointsAgainst": {
+          "type": "number",
+          "description": "Control points scored by the opponent."
+        },
+        "opponentName": {
+          "type": "string",
+          "description": "Name of the opponent."
+        },
+        "opponentFaction": {
+          "type": "string",
+          "description": "Faction used by the opponent."
+        },
+        "mission": {
+          "type": "string",
+          "description": "Mission or scenario played."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Game summary and notes."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "outcome", "createdAt", "updatedAt"]
     }
   },
   "firestore": {
@@ -173,6 +230,10 @@
     "/armyLists/{listId}": {
       "schema": { "$ref": "ArmyList" },
       "description": "Stores saved army lists."
+    },
+    "/gameLogs/{logId}": {
+      "schema": { "$ref": "GameRecord" },
+      "description": "Stores game logs and match results."
     }
   }
 }

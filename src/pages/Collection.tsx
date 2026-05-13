@@ -9,6 +9,7 @@ import { WARHAMMER_40K_DATA } from '../data/warhammer40k';
 interface Model {
   id: string;
   modelName: string;
+  nickname?: string;
   qty: number;
   status: string;
   pointsPerModel?: number;
@@ -30,6 +31,7 @@ export function Collection() {
 
   const [formData, setFormData] = useState({
     modelName: '',
+    nickname: '',
     qty: 1,
     status: 'Unbuilt',
     pointsPerModel: 0,
@@ -65,11 +67,13 @@ export function Collection() {
       if (editingModel) {
         await updateDoc(doc(db, 'collection', editingModel.id), {
           ...formData,
+          nickname: formData.nickname || null, // store null instead of empty string if not provided
           updatedAt: serverTimestamp()
         });
       } else {
         await addDoc(collection(db, 'collection'), {
           ...formData,
+          nickname: formData.nickname || null,
           uid: user.uid,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
@@ -95,6 +99,7 @@ export function Collection() {
       setEditingModel(model);
       setFormData({
         modelName: model.modelName,
+        nickname: model.nickname || '',
         qty: model.qty,
         status: model.status,
         pointsPerModel: model.pointsPerModel || 0,
@@ -105,6 +110,7 @@ export function Collection() {
       setEditingModel(null);
       setFormData({
         modelName: '',
+        nickname: '',
         qty: 1,
         status: 'Unbuilt',
         pointsPerModel: 0,
@@ -124,6 +130,7 @@ export function Collection() {
     const searchLower = searchQuery.toLowerCase();
     const systemStr = m.gameSystem || 'Warhammer 40k';
     const matchesSearch = m.modelName.toLowerCase().includes(searchLower) || 
+                          (m.nickname && m.nickname.toLowerCase().includes(searchLower)) ||
                           m.faction.toLowerCase().includes(searchLower) ||
                           systemStr.toLowerCase().includes(searchLower);
     const matchesStatus = statusFilter === 'All' || m.status === statusFilter;
@@ -275,7 +282,10 @@ export function Collection() {
                     exit={{ opacity: 0 }}
                     className="hover:bg-zinc-800/30 transition-colors"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{model.modelName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-white">{model.modelName}</div>
+                      {model.nickname && <div className="text-xs text-zinc-500 italic mt-0.5">&quot;{model.nickname}&quot;</div>}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">{model.gameSystem || 'Warhammer 40k'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">{model.faction}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400 font-mono">{model.qty}</td>
@@ -420,6 +430,18 @@ export function Collection() {
                                 ))}
                               </datalist>
                             )}
+                          </div>
+                          <div>
+                            <label htmlFor="nickname" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Nickname / Description (Optional)</label>
+                            <input
+                              type="text"
+                              name="nickname"
+                              id="nickname"
+                              placeholder="e.g. Purple Sash, Squad Alpha..."
+                              value={formData.nickname}
+                              onChange={(e) => setFormData({...formData, nickname: e.target.value})}
+                              className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-fuchsia-500 focus:border-fuchsia-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                            />
                           </div>
                           {selectedModelData && selectedModelData.points.length > 0 && (
                             <div>
