@@ -16,11 +16,14 @@ export function Login() {
         <div className="flex justify-center">
           <Shield className="h-16 w-16 text-blue-500" />
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-white tracking-tight">
+        <h2 className="mt-6 text-center text-xl font-medium text-blue-400 tracking-wide uppercase">
           War Dollies Anonymous
         </h2>
-        <p className="mt-2 text-center text-sm text-zinc-400">
-          Track your miniatures, manage your pile of shame, and build armies with AI.
+        <h1 className="mt-2 text-center text-4xl font-extrabold text-white tracking-tight">
+          Admitting it<br />is the first step.
+        </h1>
+        <p className="mt-4 text-center text-lg text-zinc-400 max-w-xs mx-auto">
+          Your sprue-covered desk misses you. Let’s get those models tabletop ready.
         </p>
       </motion.div>
 
@@ -38,6 +41,15 @@ export function Login() {
             <LogIn className="mr-2 h-5 w-5" />
             Sign in with Google
           </button>
+          
+          <div className="mt-6 text-center">
+            <button 
+              onClick={login}
+              className="text-sm text-zinc-500 hover:text-blue-400 transition-colors underline underline-offset-4"
+            >
+              Start your recovery. Create an account.
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>
