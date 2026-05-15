@@ -107,7 +107,7 @@ export function ArmyBuilder() {
       );
 
       if (availableModels.length === 0) {
-        setError(`You don't have any Assembled or Painted models for ${selectedFaction} in ${selectedGameSystem}. Get building!`);
+        setError(`You literally haven't built or painted enough models to field this for ${selectedFaction} in ${selectedGameSystem}. Stop reading rules and start clipping plastic.`);
         setGenerating(false);
         return;
       }
@@ -190,9 +190,9 @@ Please format the output as a clean Markdown document with:
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
             <Shield className="mr-3 h-8 w-8 text-blue-500" />
-            The AI-Powered Relapse Strategist
+            The Purchase Justifier
           </h1>
-          <p className="text-zinc-400 mt-1">Generate optimal deployment lists from your available assets.</p>
+          <p className="text-zinc-400 mt-1">Have the AI build a list so you can justify buying that "one last unit" you clearly need.</p>
         </div>
       </div>
 

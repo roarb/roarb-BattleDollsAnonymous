@@ -1,18 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { motion } from 'motion/react';
-import { Package, CheckCircle, Activity, Flame, Shield, TrendingUp, Settings, Swords } from 'lucide-react';
+import { Package, CheckCircle, Activity, Flame, TrendingUp, Settings, Swords, ShieldOff, DollarSign, Clock } from 'lucide-react';
+import { WARHAMMER_40K_DATA } from '../data/warhammer40k';
 
 interface Model {
   id: string;
   modelName: string;
+  nickname?: string;
   qty: number;
   status: string;
+  pointsPerModel?: number;
+  unitCost?: number;
   faction: string;
   gameSystem?: string;
+  createdAt: any;
   updatedAt: any;
 }
 
@@ -24,66 +29,6 @@ const STATUS_COLORS = {
   'Tabletop Ready': '#10b981', // emerald-500
 };
 
-// Helper to calculate hobby streak
-const calculateStreak = (models: Model[]) => {
-  if (models.length === 0) return { current: 0, best: 0 };
-
-  // Get all unique dates of activity
-  const activityDates = new Set<string>();
-  models.forEach(m => {
-    if (m.updatedAt && m.updatedAt.toDate) {
-      const date = m.updatedAt.toDate();
-      date.setHours(0, 0, 0, 0);
-      activityDates.add(date.getTime().toString());
-    }
-  });
-
-  const sortedDates = Array.from(activityDates).map(Number).sort((a, b) => b - a);
-  if (sortedDates.length === 0) return { current: 0, best: 0 };
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayTime = today.getTime();
-  const yesterdayTime = todayTime - 86400000;
-
-  let currentStreak = 0;
-  let bestStreak = 0;
-  let tempStreak = 1;
-
-  // Calculate current streak
-  let checkTime = todayTime;
-  if (activityDates.has(todayTime.toString())) {
-    currentStreak = 1;
-    checkTime = yesterdayTime;
-    while (activityDates.has(checkTime.toString())) {
-      currentStreak++;
-      checkTime -= 86400000;
-    }
-  } else if (activityDates.has(yesterdayTime.toString())) {
-    currentStreak = 1;
-    checkTime = yesterdayTime - 86400000;
-    while (activityDates.has(checkTime.toString())) {
-      currentStreak++;
-      checkTime -= 86400000;
-    }
-  }
-
-  // Calculate best streak
-  for (let i = 0; i < sortedDates.length - 1; i++) {
-    if (sortedDates[i] - sortedDates[i + 1] === 86400000) {
-      tempStreak++;
-    } else {
-      if (tempStreak > bestStreak) bestStreak = tempStreak;
-      tempStreak = 1;
-    }
-  }
-  if (tempStreak > bestStreak) bestStreak = tempStreak;
-  
-  // If only one day of activity, best is 1
-  if (sortedDates.length === 1) bestStreak = 1;
-
-  return { current: currentStreak, best: Math.max(bestStreak, currentStreak) };
-};
 
 // Helper to generate last 90 days for heatmap
 const generateHeatmapData = (models: Model[]) => {
@@ -161,32 +106,56 @@ export function Dashboard() {
   const [games, setGames] = useState<any[]>([]);
   const [relapses, setRelapses] = useState<any[]>([]);
   const [isRelapseModalOpen, setIsRelapseModalOpen] = useState(false);
-  const [relapseFormData, setRelapseFormData] = useState({ msrp: '', boxName: '', reason: '' });
+  const [relapseFormData, setRelapseFormData] = useState({
+    modelName: '', nickname: '', qty: 1, pointsPerModel: 0,
+    unitCost: '' as number | string, faction: '', gameSystem: 'Warhammer 40k', reason: ''
+  });
   const [savingRelapse, setSavingRelapse] = useState(false);
+  const [recoveryPlan, setRecoveryPlan] = useState<string | null>(null);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
+
+  const selectedFactionData = relapseFormData.gameSystem === 'Warhammer 40k'
+    ? WARHAMMER_40K_DATA.find(f => f.name === relapseFormData.faction)
+    : undefined;
+  const selectedModelData = selectedFactionData
+    ? selectedFactionData.models.find(m => m.name === relapseFormData.modelName)
+    : undefined;
 
   useEffect(() => {
     if (!user) return;
 
-    // Fetch user settings for target faction
-    const fetchSettings = async () => {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          if (data.targetArmyId) {
+    // Fetch user settings and streak
+    const userUnsub = onSnapshot(doc(db, 'users', user.uid), async (userDoc) => {
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        if (data.targetArmyId) {
+          try {
             const armyDoc = await getDoc(doc(db, 'armyLists', data.targetArmyId));
             if (armyDoc.exists()) {
               setTargetArmy({ title: armyDoc.data().title, faction: armyDoc.data().faction });
             }
-          } else if (data.targetFaction) {
-            setTargetFaction(data.targetFaction);
-          }
+          } catch (e) {}
+        } else if (data.targetFaction) {
+          setTargetFaction(data.targetFaction);
         }
-      } catch (err) {
-        console.error("Error fetching user settings:", err);
+
+        const todayDate = new Date();
+        const today = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
+        const lastDate = data.lastStreakDate || '';
+        
+        const yesterdayDate = new Date();
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterdayStr = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+        
+        if (lastDate !== today && lastDate !== yesterdayStr && data.currentStreak > 0) {
+          setCurrentStreak(0);
+        } else {
+          setCurrentStreak(data.currentStreak || 0);
+        }
+        setBestStreak(data.bestStreak || 0);
       }
-    };
-    fetchSettings();
+    });
 
     const q = query(collection(db, 'collection'), where('uid', '==', user.uid));
     
@@ -224,7 +193,7 @@ export function Dashboard() {
       setLoading(false);
     });
 
-    return () => { unsubscribe(); unsubscribeGames(); unsubscribeRelapses(); };
+    return () => { unsubscribe(); unsubscribeGames(); unsubscribeRelapses(); userUnsub(); };
   }, [user]);
 
   const handleSaveRelapse = async (e: React.FormEvent) => {
@@ -232,17 +201,43 @@ export function Dashboard() {
     if (!user) return;
     setSavingRelapse(true);
     try {
-      const { serverTimestamp, addDoc, collection } = await import('firebase/firestore');
+      const cost = typeof relapseFormData.unitCost === 'number' ? relapseFormData.unitCost : 0;
+
+      // 1. Add to collection as Unbuilt
+      await addDoc(collection(db, 'collection'), {
+        uid: user.uid,
+        modelName: relapseFormData.modelName,
+        nickname: relapseFormData.nickname,
+        qty: relapseFormData.qty,
+        status: 'Unbuilt',
+        pointsPerModel: relapseFormData.pointsPerModel,
+        unitCost: cost,
+        faction: relapseFormData.faction,
+        gameSystem: relapseFormData.gameSystem,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      // 2. Log the relapse
       await addDoc(collection(db, 'relapses'), {
         uid: user.uid,
-        msrp: Number(relapseFormData.msrp),
-        boxName: relapseFormData.boxName,
+        msrp: cost,
+        boxName: relapseFormData.modelName,
         reason: relapseFormData.reason,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+
+      // 3. Recovery plan: 1 model per $20, rounded up
+      const modelsToFinish = Math.ceil(cost / 20);
+      setRecoveryPlan(`Recovery Plan: Finish ${modelsToFinish} existing model${modelsToFinish !== 1 ? 's' : ''} before opening this box.`);
+      setTimeout(() => setRecoveryPlan(null), 8000);
+
       setIsRelapseModalOpen(false);
-      setRelapseFormData({ msrp: '', boxName: '', reason: '' });
+      setRelapseFormData({
+        modelName: '', nickname: '', qty: 1, pointsPerModel: 0,
+        unitCost: '', faction: '', gameSystem: 'Warhammer 40k', reason: ''
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'relapses');
     } finally {
@@ -268,14 +263,56 @@ export function Dashboard() {
   const wins = games.filter(g => g.outcome === 'Win').length;
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   
-  const streak = calculateStreak(models);
 
   // Recovery Savings
-  const paintedCountForSavings = models.filter(m => ['Painted', 'Tabletop Ready'].includes(m.status)).reduce((acc, m) => acc + m.qty, 0);
-  const estimatedSavingsPerPaintedModel = 45; // ~ $45 MSRP per model set on average painted
+  const paintedModelsTotalCost = models
+    .filter(m => ['Painted', 'Tabletop Ready'].includes(m.status))
+    .reduce((acc, m) => acc + ((m as any).unitCost || 0), 0);
+    
   const totalRelapseSpent = relapses.reduce((acc, r) => acc + (Number(r.msrp) || 0), 0);
-  const recoverySavingsRaw = (paintedCountForSavings * estimatedSavingsPerPaintedModel) - totalRelapseSpent;
+  const recoverySavingsRaw = paintedModelsTotalCost - totalRelapseSpent;
   const recoverySavings = recoverySavingsRaw > 0 ? recoverySavingsRaw : 0;
+
+  // Days Sober (since last relapse)
+  const sortedRelapses = [...relapses].sort((a, b) => {
+    const aTime = a.createdAt?.toDate?.() || new Date(0);
+    const bTime = b.createdAt?.toDate?.() || new Date(0);
+    return bTime.getTime() - aTime.getTime();
+  });
+  const lastRelapseDate = sortedRelapses.length > 0 && sortedRelapses[0].createdAt?.toDate
+    ? sortedRelapses[0].createdAt.toDate()
+    : null;
+  const daysSober = lastRelapseDate
+    ? Math.floor((Date.now() - lastRelapseDate.getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  // Pile of Shame (total MSRP of non-completed units)
+  const pileOfShameCost = models
+    .filter(m => !['Painted', 'Tabletop Ready'].includes(m.status))
+    .reduce((acc, m) => acc + (m.unitCost || 0), 0);
+
+  // Ledger of Excess (unbuilt kits sorted oldest first)
+  const unbuiltModels = models
+    .filter(m => m.status === 'Unbuilt')
+    .sort((a, b) => {
+      const aTime = a.createdAt?.toDate?.() || new Date();
+      const bTime = b.createdAt?.toDate?.() || new Date();
+      return aTime.getTime() - bTime.getTime();
+    });
+
+  const getTimeInShame = (createdAt: any) => {
+    if (!createdAt?.toDate) return 'Unknown';
+    const diff = Date.now() - createdAt.toDate().getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days < 1) return 'Today';
+    if (days === 1) return '1 day';
+    if (days < 30) return `${days} days`;
+    if (days < 60) return '1 month';
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months} months`;
+    const years = Math.floor(months / 12);
+    return years === 1 ? '1 year' : `${years} years`;
+  };
 
   const heatmapData = generateHeatmapData(models);
   const velocityData = generateVelocityData(models);
@@ -302,39 +339,55 @@ export function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
             <Activity className="mr-3 h-8 w-8 text-blue-500" />
-            The Daily Accountability Dashboard
+            The Accountability Mirror
           </h1>
-          <p className="text-zinc-400 mt-1">Track your plastic crack addiction with performance metrics and collection telemetry.</p>
+          <p className="text-zinc-400 mt-1">Look upon your Pile of Shame, ye mighty, and despair. (Or just track your addiction).</p>
         </div>
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setIsRelapseModalOpen(true)}
+            title="Log a new purchase — this will add the unit to your Stash as Unbuilt"
             className="inline-flex items-center px-5 py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/30 hover:border-red-500/50 rounded-lg text-sm font-medium transition-all duration-300"
           >
             <Flame className="-ml-1 mr-2 h-5 w-5" />
             Log a Relapse
           </button>
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'army-builder' }))}
-            className="inline-flex items-center px-5 py-2.5 border border-blue-500/30 rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-blue-600/10 hover:bg-blue-600/20 hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-950 transition-all duration-300"
-          >
-            <Shield className="-ml-1 mr-2 h-5 w-5 text-blue-400" />
-            Deploy Forces
-          </button>
         </div>
       </div>
+
+      {/* Recovery Plan Banner */}
+      {recoveryPlan && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center space-x-3"
+        >
+          <ShieldOff className="h-6 w-6 text-amber-400 flex-shrink-0" />
+          <p className="text-amber-300 text-sm font-medium">{recoveryPlan}</p>
+        </motion.div>
+      )}
 
       {/* Top Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <MetricCard 
-          title="Total Assets" 
-          value={totalModels} 
-          subtitle="Miniatures logged"
-          icon={Package} 
-          trend="Across all factions"
+          title="Days Sober" 
+          value={daysSober !== null ? daysSober : '∞'} 
+          subtitle={daysSober !== null ? (daysSober === 0 ? "You relapsed today. Shameful." : "Since your last plastic purchase") : "No relapses on record. Suspicious."}
+          icon={Clock} 
+          color={daysSober !== null && daysSober < 7 ? "text-red-500" : "text-emerald-500"}
+          trend={lastRelapseDate ? `Last: ${lastRelapseDate.toLocaleDateString()}` : "Clean record"}
         />
         <MetricCard 
-          title="Ready For War" 
+          title="Pile of Shame" 
+          value={`$${pileOfShameCost.toLocaleString()}`} 
+          subtitle="Total MSRP of unfinished units"
+          icon={DollarSign} 
+          color="text-red-400"
+          trend={`${models.filter(m => !['Painted', 'Tabletop Ready'].includes(m.status)).length} units unfinished`}
+        />
+        <MetricCard 
+          title="Actually Finished" 
           value={`${completionRate}%`} 
           subtitle={`${paintedCount} fully painted`}
           icon={CheckCircle} 
@@ -344,29 +397,20 @@ export function Dashboard() {
           actionIcon={Settings}
         />
         <MetricCard 
-          title="Win Rate" 
-          value={`${winRate}%`} 
-          subtitle={`${wins} Wins out of ${totalGames}`}
-          icon={Swords} 
-          color="text-indigo-500"
-          trend="Recorded matches"
-          onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'matches' }))}
-        />
-        <MetricCard 
           title="Recovery Savings" 
           value={`$${recoverySavings.toLocaleString()}`} 
-          subtitle={`-$${totalRelapseSpent.toLocaleString()} spent on relapses`}
+          subtitle="Total MSRP of completed units"
           icon={TrendingUp} 
           color="text-emerald-500"
-          trend="Est. value of painted models"
+          trend={`Minus $${totalRelapseSpent.toLocaleString()} spent on relapses`}
         />
         <MetricCard 
           title="Hobby Streak" 
-          value={`${streak.current} Days`} 
-          subtitle="Consecutive activity"
+          value={`${currentStreak} Days`} 
+          subtitle="Consecutive days of forward progress"
           icon={Flame} 
           color="text-orange-500"
-          trend={`Personal best: ${streak.best}`}
+          trend={`Personal best: ${bestStreak}`}
         />
       </div>
 
@@ -380,7 +424,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-medium text-white flex items-center">
               <TrendingUp className="mr-2 h-5 w-5 text-blue-500" />
-              Hobby Velocity
+              Shame Accumulation vs. Completion
             </h2>
             <span className="text-xs font-medium px-2.5 py-1 bg-zinc-800 text-zinc-300 rounded-full border border-zinc-700">Last 6 Months</span>
           </div>
@@ -506,49 +550,177 @@ export function Dashboard() {
         </div>
       </motion.div>
 
+      {/* Ledger of Excess */}
+      {unbuiltModels.length > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-sm"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-medium text-white flex items-center">
+              <Package className="mr-2 h-5 w-5 text-red-400" />
+              The Ledger of Excess
+            </h2>
+            <span className="text-xs font-medium px-2.5 py-1 bg-red-500/10 text-red-400 rounded-full border border-red-500/20">
+              {unbuiltModels.length} unbuilt — ${unbuiltModels.reduce((a, m) => a + (m.unitCost || 0), 0).toLocaleString()} USD
+            </span>
+          </div>
+          <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+            {unbuiltModels.map(m => (
+              <div key={m.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-zinc-950/50 border border-zinc-800/40 hover:border-zinc-700/60 transition-colors">
+                <div className="flex items-center space-x-3 min-w-0">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{m.modelName}</p>
+                    <p className="text-xs text-zinc-500">{m.faction} · {m.gameSystem || 'Warhammer 40k'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 flex-shrink-0">
+                  {m.unitCost ? (
+                    <span className="text-xs text-zinc-400">${m.unitCost}</span>
+                  ) : (
+                    <span className="text-xs text-red-400">$0</span>
+                  )}
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700/50">
+                    {getTimeInShame(m.createdAt)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       {/* Relapse Modal */}
       {isRelapseModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-zinc-950 border border-red-900/50 rounded-xl max-w-md w-full p-6 shadow-2xl">
+          <div className="bg-zinc-950 border border-red-900/50 rounded-xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-red-500 mb-2 flex items-center">
               <Flame className="w-6 h-6 mr-2" />
               Log a Relapse
             </h2>
-            <p className="text-zinc-400 text-sm mb-6">Confess your plastic crack sins. This cuts into your Recovery Savings.</p>
+            <p className="text-zinc-400 text-sm mb-6">Admit it. You bought more plastic. This will add the unit to your Stash as Unbuilt.</p>
             
             <form onSubmit={handleSaveRelapse} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Game System</label>
+                  <select
+                    required
+                    value={relapseFormData.gameSystem}
+                    onChange={e => setRelapseFormData({...relapseFormData, gameSystem: e.target.value})}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+                  >
+                    <option value="Warhammer 40k">Warhammer 40k</option>
+                    <option value="Age of Sigmar">Age of Sigmar</option>
+                    <option value="BattleTech">BattleTech</option>
+                    <option value="Star Wars: Legion">Star Wars: Legion</option>
+                    <option value="Kill Team">Kill Team</option>
+                    <option value="Warcry">Warcry</option>
+                    <option value="Marvel Crisis Protocol">Marvel Crisis Protocol</option>
+                    <option value="Warhammer: The Old World">Warhammer: The Old World</option>
+                    <option value="Infinity">Infinity</option>
+                    <option value="Firefight">Firefight</option>
+                    <option value="Conquest: The Last Argument of Kings">Conquest</option>
+                    <option value="Frostgrave">Frostgrave</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Faction</label>
+                  <input
+                    type="text" required
+                    list={relapseFormData.gameSystem === 'Warhammer 40k' ? 'relapse-factions' : undefined}
+                    value={relapseFormData.faction}
+                    onChange={e => setRelapseFormData({...relapseFormData, faction: e.target.value})}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+                  />
+                  {relapseFormData.gameSystem === 'Warhammer 40k' && (
+                    <datalist id="relapse-factions">
+                      {WARHAMMER_40K_DATA.map(f => <option key={f.name} value={f.name} />)}
+                    </datalist>
+                  )}
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Street Value (MSRP $)</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">$</span>
-                  <input 
-                    type="number" min="0" required 
-                    value={relapseFormData.msrp} 
-                    onChange={e => setRelapseFormData({...relapseFormData, msrp: e.target.value})}
-                    placeholder="e.g. 60"
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 pl-8 text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">What did you buy?</label>
+                <input
+                  type="text" required
+                  list={selectedFactionData ? 'relapse-models' : undefined}
+                  value={relapseFormData.modelName}
+                  onChange={e => {
+                    const newName = e.target.value;
+                    let newQty = relapseFormData.qty;
+                    let newPoints = relapseFormData.pointsPerModel;
+                    if (selectedFactionData) {
+                      const md = selectedFactionData.models.find(m => m.name === newName);
+                      if (md && md.points.length > 0) {
+                        newQty = md.points[0].qty;
+                        newPoints = Math.round(md.points[0].pts / newQty);
+                      }
+                    }
+                    setRelapseFormData({...relapseFormData, modelName: newName, qty: newQty, pointsPerModel: newPoints});
+                  }}
+                  placeholder="e.g. Combat Patrol: Tyranids"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+                />
+                {selectedFactionData && (
+                  <datalist id="relapse-models">
+                    {selectedFactionData.models.map(m => <option key={m.name} value={m.name} />)}
+                  </datalist>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Nickname (Optional)</label>
+                <input
+                  type="text"
+                  value={relapseFormData.nickname}
+                  onChange={e => setRelapseFormData({...relapseFormData, nickname: e.target.value})}
+                  placeholder="e.g. Purple Sash, Squad Alpha..."
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Qty</label>
+                  <input
+                    type="number" min="1" required
+                    value={relapseFormData.qty}
+                    onChange={e => setRelapseFormData({...relapseFormData, qty: parseInt(e.target.value) || 1})}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Pts/Model</label>
+                  <input
+                    type="number" min="0"
+                    value={relapseFormData.pointsPerModel}
+                    onChange={e => setRelapseFormData({...relapseFormData, pointsPerModel: parseInt(e.target.value) || 0})}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Cost (USD)</label>
+                  <input
+                    type="number" min="0" step="0.01"
+                    placeholder="60.00"
+                    value={relapseFormData.unitCost}
+                    onChange={e => setRelapseFormData({...relapseFormData, unitCost: e.target.value ? parseFloat(e.target.value) : ''})}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">What did you buy?</label>
-                <input 
-                  type="text" required 
-                  value={relapseFormData.boxName} 
-                  onChange={e => setRelapseFormData({...relapseFormData, boxName: e.target.value})}
-                  placeholder="e.g. Combat Patrol: Tyranids"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Reason for Lapse</label>
+                <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Reason for Lapse</label>
                 <select
                   required
                   value={relapseFormData.reason}
                   onChange={e => setRelapseFormData({...relapseFormData, reason: e.target.value})}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
                 >
                   <option value="">Select an excuse...</option>
                   <option value="The sculpts were too cool">The sculpts were too cool</option>
@@ -556,22 +728,24 @@ export function Dashboard() {
                   <option value="I have no self-control">I literally have no self-control</option>
                   <option value="Needed for my list">Needed it for a tournament list</option>
                   <option value="Good deal">It was a really good deal</option>
+                  <option value="I convinced myself I'd paint them this weekend">I convinced myself I'd paint them this weekend</option>
+                  <option value="The box art lied to me">The box art lied to me</option>
                   <option value="Other">Other...</option>
                 </select>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-6 mt-6 border-t border-zinc-800">
+              <div className="flex justify-end space-x-3 pt-4 mt-4 border-t border-zinc-800">
                 <button 
                   type="button" 
                   onClick={() => setIsRelapseModalOpen(false)} 
-                  className="px-4 py-2 border border-zinc-700 bg-zinc-800 rounded-lg text-white hover:bg-zinc-700 transition-colors"
+                  className="px-4 py-2 border border-zinc-700 bg-zinc-800 rounded-lg text-white hover:bg-zinc-700 transition-colors text-sm"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
                   disabled={savingRelapse} 
-                  className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white disabled:opacity-50 transition-colors font-medium"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white disabled:opacity-50 transition-colors font-medium text-sm"
                 >
                   {savingRelapse ? 'Confessing...' : 'Log Relapse'}
                 </button>

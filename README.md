@@ -27,12 +27,12 @@ View your app in AI Studio: https://ai.studio/apps/a5d5d405-77d7-48e2-a812-9a80a
 
 To sync your data model (schema) and security rules with Google Cloud Firestore, use the following commands:
 
-1. **Login to Google:**
+1. **Login to Firebase:**
    ```bash
-   npm run fb-login
+   npm run firebase-login
    ```
-2. **Publish Configuration:**
+2. **Deploy Configuration and App:**
    ```bash
-   npm run fb-publish
+   npm run firebase-deploy
    ```
-   This will deploy the security rules from `firestore.rules` and configure the database structure defined in `firebase-blueprint.json` to your project specified in `firebase-applet-config.json`.
+   This will build the app and deploy the security rules from `firestore.rules` (and the web app to Hosting) using the standard Firebase CLI.

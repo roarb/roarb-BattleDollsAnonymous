@@ -114,9 +114,9 @@ export function Armies() {
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
             <Shield className="mr-3 h-8 w-8 text-blue-500" />
-            Saved Strategic Blueprints & Intentions
+            Delusions of Grandeur
           </h1>
-          <p className="text-zinc-400 mt-1">Manage your battle-forged lists and strategic notes.</p>
+          <p className="text-zinc-400 mt-1">Lists you've theory-crafted but probably don't have the painted models for yet.</p>
         </div>
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'army-builder' }))}

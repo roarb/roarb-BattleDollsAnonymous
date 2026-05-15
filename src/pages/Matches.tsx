@@ -190,9 +190,9 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
             <Swords className="mr-3 h-8 w-8 text-blue-500" />
-            Field Testimonies & After-Action Reports
+            Tales of Gray Plastic
           </h1>
-          <p className="text-zinc-400 mt-1">Track your games, analyze your performance, and consult the AI Coach.</p>
+          <p className="text-zinc-400 mt-1">Log the games where your unpainted models inevitably rolled worse than your opponent's painted ones.</p>
         </div>
         <div className="flex space-x-3">
           <button
@@ -201,7 +201,7 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
             disabled={coachLoading || games.length === 0}
           >
             <MessageSquareHeart className="mr-2 h-4 w-4" />
-            {coachLoading ? 'Consulting Warp...' : 'AI Coach'}
+            {coachLoading ? 'Asking AI why you lost...' : 'AI Coach'}
           </button>
           <button
             onClick={() => handleOpenModal()}

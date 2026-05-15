@@ -31,6 +31,25 @@
           "type": "string",
           "description": "The user's selected target army ID for combat readiness."
         },
+        "unlockedAchievements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of unlocked achievement IDs."
+        },
+        "currentStreak": {
+          "type": "number",
+          "description": "The user's current consecutive days of hobby progress."
+        },
+        "bestStreak": {
+          "type": "number",
+          "description": "The user's longest consecutive days of hobby progress."
+        },
+        "lastStreakDate": {
+          "type": "string",
+          "description": "The YYYY-MM-DD date of the last streak increment."
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time"
@@ -67,6 +86,10 @@
         "pointsPerModel": {
           "type": "number",
           "description": "The points value per model (optional)."
+        },
+        "unitCost": {
+          "type": "number",
+          "description": "The MSRP or cost of the unit/box (optional)."
         },
         "faction": {
           "type": "string",

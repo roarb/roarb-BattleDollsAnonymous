@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { Plus, Edit2, Trash2, Search, Filter, Database, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Filter, Database, ChevronUp, ChevronDown, ChevronsUpDown, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WARHAMMER_40K_DATA } from '../data/warhammer40k';
 
@@ -13,6 +13,7 @@ interface Model {
   qty: number;
   status: string;
   pointsPerModel?: number;
+  unitCost?: number;
   faction: string;
   gameSystem?: string;
 }
@@ -35,6 +36,7 @@ export function Collection() {
     qty: 1,
     status: 'Unbuilt',
     pointsPerModel: 0,
+    unitCost: '' as number | string,
     faction: '',
     gameSystem: 'Warhammer 40k'
   });
@@ -64,21 +66,63 @@ export function Collection() {
     if (!user) return;
 
     try {
+      let isForwardProgress = false;
+      const statusOrder = ['Unbuilt', 'Assembled', 'Primed', 'Painted', 'Tabletop Ready'];
+
       if (editingModel) {
         await updateDoc(doc(db, 'collection', editingModel.id), {
           ...formData,
-          nickname: formData.nickname || null, // store null instead of empty string if not provided
           updatedAt: serverTimestamp()
         });
+        
+        const oldIdx = statusOrder.indexOf(editingModel.status);
+        const newIdx = statusOrder.indexOf(formData.status);
+        if (newIdx > oldIdx) isForwardProgress = true;
       } else {
         await addDoc(collection(db, 'collection'), {
           ...formData,
-          nickname: formData.nickname || null,
           uid: user.uid,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
+        isForwardProgress = true; // Logging new plastic counts as hobby activity
       }
+
+      if (isForwardProgress) {
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          const todayDate = new Date();
+          const today = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
+          
+          const yesterdayDate = new Date();
+          yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+          const yesterdayStr = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+          
+          const lastStreakDate = userData.lastStreakDate || '';
+          let newStreak = userData.currentStreak || 0;
+          let newBest = userData.bestStreak || 0;
+
+          if (lastStreakDate !== today) {
+            if (lastStreakDate === yesterdayStr) {
+              newStreak += 1;
+            } else {
+              newStreak = 1;
+            }
+
+            if (newStreak > newBest) newBest = newStreak;
+
+            await updateDoc(userRef, {
+              currentStreak: newStreak,
+              bestStreak: newBest,
+              lastStreakDate: today
+            });
+          }
+        }
+      }
+
       closeModal();
     } catch (error) {
       handleFirestoreError(error, editingModel ? OperationType.UPDATE : OperationType.CREATE, 'collection');
@@ -103,6 +147,7 @@ export function Collection() {
         qty: model.qty,
         status: model.status,
         pointsPerModel: model.pointsPerModel || 0,
+        unitCost: model.unitCost !== undefined ? model.unitCost : '',
         faction: model.faction,
         gameSystem: model.gameSystem || 'Warhammer 40k'
       });
@@ -114,6 +159,7 @@ export function Collection() {
         qty: 1,
         status: 'Unbuilt',
         pointsPerModel: 0,
+        unitCost: '',
         faction: '',
         gameSystem: 'Warhammer 40k'
       });
@@ -215,16 +261,16 @@ export function Collection() {
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
             <Database className="mr-3 h-8 w-8 text-blue-500" />
-            Full Disclosure: The Asset Vault
+            The Pile of Shame Registry
           </h1>
-          <p className="text-zinc-400 mt-1">Manage and track your miniature collection.</p>
+          <p className="text-zinc-400 mt-1">Document every sprue you swore you'd paint before buying more.</p>
         </div>
         <button
           onClick={() => openModal()}
-          className="inline-flex items-center px-5 py-2.5 border border-blue-500/30 rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-blue-600/10 hover:bg-blue-600/20 hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-950 transition-all duration-300"
+          className="inline-flex items-center px-5 py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/30 hover:border-red-500/50 rounded-lg text-sm font-medium transition-all duration-300"
         >
-          <Plus className="-ml-1 mr-2 h-5 w-5 text-blue-400" />
-          Log New Asset
+          <Flame className="-ml-1 mr-2 h-5 w-5" />
+          Admit to Another Purchase
         </button>
       </div>
 
@@ -267,53 +313,95 @@ export function Collection() {
                 <SortableHeader label="Game System" sortKey="gameSystem" />
                 <SortableHeader label="Faction" sortKey="faction" />
                 <SortableHeader label="Qty" sortKey="qty" />
+                <SortableHeader label="Unit Cost" sortKey="unitCost" />
                 <SortableHeader label="Status" sortKey="status" />
                 <SortableHeader label="Points" sortKey="pointsPerModel" />
                 <th scope="col" className="relative px-6 py-4"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody className="bg-transparent divide-y divide-zinc-800/50">
-              {sortedModels.length > 0 ? (
-                sortedModels.map((model) => (
-                  <motion.tr 
-                    key={model.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="hover:bg-zinc-800/30 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-white">{model.modelName}</div>
-                      {model.nickname && <div className="text-xs text-zinc-500 italic mt-0.5">&quot;{model.nickname}&quot;</div>}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">{model.gameSystem || 'Warhammer 40k'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">{model.faction}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400 font-mono">{model.qty}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-medium rounded-md border
-                        ${model.status === 'Tabletop Ready' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
-                          model.status === 'Painted' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' : 
-                          model.status === 'Primed' ? 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' : 
-                          model.status === 'Assembled' ? 'bg-zinc-600/10 text-zinc-300 border-zinc-600/20' : 
-                          'bg-zinc-700/10 text-zinc-500 border-zinc-700/20'}`}>
-                        {model.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400 font-mono">{model.pointsPerModel ? model.pointsPerModel * model.qty : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button onClick={() => openModal(model)} className="text-zinc-500 hover:text-blue-400 mr-4 transition-colors">
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button onClick={() => handleDelete(model.id)} className="text-zinc-500 hover:text-red-400 transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </motion.tr>
-                ))
-              ) : (
+              {sortedModels.length > 0 ? (() => {
+                // Group by gameSystem then faction
+                const grouped: Record<string, Record<string, typeof sortedModels>> = {};
+                sortedModels.forEach(m => {
+                  const sys = m.gameSystem || 'Warhammer 40k';
+                  const fac = m.faction;
+                  if (!grouped[sys]) grouped[sys] = {};
+                  if (!grouped[sys][fac]) grouped[sys][fac] = [];
+                  grouped[sys][fac].push(m);
+                });
+
+                const rows: React.ReactNode[] = [];
+                Object.keys(grouped).sort().forEach(sys => {
+                  rows.push(
+                    <tr key={`sys-${sys}`}>
+                      <td colSpan={9} className="px-6 py-3 bg-zinc-950/80 border-b border-zinc-700/50">
+                        <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">{sys}</span>
+                      </td>
+                    </tr>
+                  );
+                  Object.keys(grouped[sys]).sort().forEach(fac => {
+                    rows.push(
+                      <tr key={`fac-${sys}-${fac}`}>
+                        <td colSpan={9} className="px-6 py-2 bg-zinc-900/40 border-b border-zinc-800/30">
+                          <span className="text-xs font-medium text-zinc-400 tracking-wider">{fac}</span>
+                        </td>
+                      </tr>
+                    );
+                    grouped[sys][fac].forEach(model => {
+                      rows.push(
+                        <motion.tr 
+                          key={model.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="hover:bg-zinc-800/30 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-white">{model.modelName}</div>
+                            {model.nickname && <div className="text-xs text-zinc-500 italic mt-0.5">&quot;{model.nickname}&quot;</div>}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">{model.gameSystem || 'Warhammer 40k'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">{model.faction}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400 font-mono">{model.qty}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            {model.unitCost !== undefined ? (
+                              <span className="text-zinc-300">${model.unitCost}</span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20 cursor-help" title="Legacy entry missing unit cost">
+                                $0 (Update)
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-medium rounded-md border
+                              ${model.status === 'Tabletop Ready' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
+                                model.status === 'Painted' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' : 
+                                model.status === 'Primed' ? 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' : 
+                                model.status === 'Assembled' ? 'bg-zinc-600/10 text-zinc-300 border-zinc-600/20' : 
+                                'bg-zinc-700/10 text-zinc-500 border-zinc-700/20'}`}>
+                              {model.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400 font-mono">{model.pointsPerModel ? model.pointsPerModel * model.qty : '-'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onClick={() => openModal(model)} className="text-zinc-500 hover:text-blue-400 mr-4 transition-colors">
+                              <Edit2 className="h-4 w-4" />
+                            </button>
+                            <button onClick={() => handleDelete(model.id)} className="text-zinc-500 hover:text-red-400 transition-colors">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </motion.tr>
+                      );
+                    });
+                  });
+                });
+                return rows;
+              })() : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-zinc-500">
-                    No assets found. Log some to your database!
+                  <td colSpan={9} className="px-6 py-12 text-center text-sm text-zinc-500">
+                    Wow, an empty pile? Are you even in the hobby? Go buy something and come back.
                   </td>
                 </tr>
               )}
@@ -349,8 +437,12 @@ export function Collection() {
                     <div className="sm:flex sm:items-start">
                       <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
                         <h3 className="text-lg leading-6 font-medium text-white flex items-center" id="modal-title">
-                          <Database className="mr-2 h-5 w-5 text-blue-500" />
-                          {editingModel ? 'Edit Asset' : 'Log New Asset'}
+                          {editingModel ? (
+                            <Database className="mr-2 h-5 w-5 text-blue-500" />
+                          ) : (
+                            <Flame className="mr-2 h-5 w-5 text-red-500" />
+                          )}
+                          {editingModel ? 'Edit Asset' : 'Admit to Another Purchase'}
                         </h3>
                         <div className="mt-6 space-y-5">
                           <div className="grid grid-cols-2 gap-4">
@@ -502,6 +594,20 @@ export function Collection() {
                             </div>
                           </div>
                           <div>
+                            <label htmlFor="unitCost" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Unit Cost / MSRP (USD)</label>
+                            <input
+                              type="number"
+                              name="unitCost"
+                              id="unitCost"
+                              min="0"
+                              step="0.01"
+                              placeholder="e.g. 60.00"
+                              value={formData.unitCost}
+                              onChange={(e) => setFormData({...formData, unitCost: e.target.value ? parseFloat(e.target.value) : ''})}
+                              className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
+                            />
+                          </div>
+                          <div>
                             <label htmlFor="status" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Status</label>
                             <select
                               id="status"
@@ -522,9 +628,13 @@ export function Collection() {
                   <div className="bg-zinc-950/50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse border-t border-zinc-800/80">
                     <button
                       type="submit"
-                      className="w-full inline-flex justify-center rounded-lg border border-blue-500/30 shadow-[0_0_10px_rgba(217,70,239,0.1)] px-4 py-2 bg-blue-600/10 text-base font-medium text-white hover:bg-blue-600/20 hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-900 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300"
+                      className={`w-full inline-flex justify-center rounded-lg border shadow-[0_0_10px_rgba(217,70,239,0.1)] px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300 ${
+                        editingModel 
+                          ? 'border-blue-500/30 bg-blue-600/10 hover:bg-blue-600/20 hover:border-blue-500/50 focus:ring-blue-500' 
+                          : 'border-red-500/30 bg-red-600/10 hover:bg-red-600/20 hover:border-red-500/50 focus:ring-red-500 text-red-500'
+                      }`}
                     >
-                      {editingModel ? 'Save Changes' : 'Log Asset'}
+                      {editingModel ? 'Save Changes' : 'Log It'}
                     </button>
                     <button
                       type="button"

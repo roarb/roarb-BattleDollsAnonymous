@@ -96,28 +96,33 @@ service cloud.firestore {
     // ===============================================================
 
     function isValidUser(data) {
-      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'createdAt', 'targetFaction', 'targetArmyId']) &&
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'createdAt', 'targetFaction', 'targetArmyId', 'unlockedAchievements', 'currentStreak', 'bestStreak', 'lastStreakDate']) &&
              data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
-             data.email is string && isValidEmail(data.email) && data.email.size() < 150 &&
-             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100)) &&
-             (!('targetFaction' in data) || (data.targetFaction is string && data.targetFaction.size() < 100)) &&
-             (!('targetArmyId' in data) || (data.targetArmyId is string && data.targetArmyId.size() < 100)) &&
-             data.role in ['admin', 'user'] &&
-             (!('createdAt' in data) || data.createdAt is timestamp);
+             (!('email' in data) || data.email == null || (data.email is string && isValidEmail(data.email) && data.email.size() < 150)) &&
+             (!('displayName' in data) || data.displayName == null || (data.displayName is string && data.displayName.size() < 100)) &&
+             (!('targetFaction' in data) || data.targetFaction == null || (data.targetFaction is string && data.targetFaction.size() < 100)) &&
+             (!('targetArmyId' in data) || data.targetArmyId == null || (data.targetArmyId is string && data.targetArmyId.size() < 100)) &&
+             (!('unlockedAchievements' in data) || data.unlockedAchievements == null || data.unlockedAchievements is list) &&
+             (!('currentStreak' in data) || data.currentStreak == null || data.currentStreak is number) &&
+             (!('bestStreak' in data) || data.bestStreak == null || data.bestStreak is number) &&
+             (!('lastStreakDate' in data) || data.lastStreakDate == null || data.lastStreakDate is string) &&
+             (!('role' in data) || data.role in ['admin', 'user']) &&
+             (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp);
     }
 
     function isValidMiniatureModel(data) {
-      return hasOnlyAllowedFields(['uid', 'modelName', 'nickname', 'qty', 'status', 'pointsPerModel', 'faction', 'gameSystem', 'createdAt', 'updatedAt']) &&
+      return hasOnlyAllowedFields(['uid', 'modelName', 'nickname', 'qty', 'status', 'pointsPerModel', 'unitCost', 'faction', 'gameSystem', 'createdAt', 'updatedAt']) &&
              data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
              data.modelName is string && data.modelName.size() > 0 && data.modelName.size() < 100 &&
-             (!('nickname' in data) || (data.nickname is string && data.nickname.size() < 100)) &&
+             (!('nickname' in data) || data.nickname == null || data.nickname == '' || (data.nickname is string && data.nickname.size() < 100)) &&
              data.qty is number && data.qty >= 0 && data.qty <= 10000 &&
              data.status in ['Unbuilt', 'Assembled', 'Primed', 'Painted', 'Tabletop Ready'] &&
-             (!('pointsPerModel' in data) || (data.pointsPerModel is number && data.pointsPerModel >= 0 && data.pointsPerModel <= 10000)) &&
+             (!('pointsPerModel' in data) || data.pointsPerModel == null || data.pointsPerModel == '' || (data.pointsPerModel is number && data.pointsPerModel >= 0 && data.pointsPerModel <= 10000)) &&
+             (!('unitCost' in data) || data.unitCost == null || data.unitCost == '' || (data.unitCost is number && data.unitCost >= 0 && data.unitCost <= 100000)) &&
              data.faction is string && data.faction.size() > 0 && data.faction.size() < 100 &&
-             (!('gameSystem' in data) || (data.gameSystem is string && data.gameSystem.size() > 0 && data.gameSystem.size() < 100)) &&
-             data.createdAt is timestamp &&
-             data.updatedAt is timestamp;
+             (!('gameSystem' in data) || data.gameSystem == null || data.gameSystem == '' || (data.gameSystem is string && data.gameSystem.size() > 0 && data.gameSystem.size() < 100)) &&
+             (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp);
     }
 
     function isValidHobbyProject(data) {
@@ -173,17 +178,8 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow create: if isAuthenticated() &&
-                    isValidUser(request.resource.data) &&
-                    isOwner(userId) &&
-                    uidUnchanged() &&
-                    ((request.resource.data.role == 'user') || isAdmin());
-      allow update: if isAuthenticated() &&
-                    isValidUser(request.resource.data) &&
-                    isOwner(userId) &&
-                    uidNotModified() &&
-                    ((request.resource.data.role == resource.data.role) || isAdmin()) &&
-                    (!('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+      allow create: if isAuthenticated() && isOwner(userId) && uidUnchanged();
+      allow update: if isAuthenticated() && isOwner(userId) && uidNotModified();
       allow delete: if isAdmin();
     }
 
@@ -192,10 +188,7 @@ service cloud.firestore {
       allow create: if isAuthenticated() &&
                     isValidMiniatureModel(request.resource.data) &&
                     uidUnchanged();
-      allow update: if isDocOwner() &&
-                    isValidMiniatureModel(request.resource.data) &&
-                    uidNotModified() &&
-                    request.resource.data.createdAt == resource.data.createdAt;
+      allow update: if isDocOwner();
       allow delete: if isDocOwner() || isAdmin();
     }
 

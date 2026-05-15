@@ -9,8 +9,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "fb-login": "npx @google/fire-applets login",
-    "fb-publish": "npx @google/fire-applets publish"
+    "firebase-login": "npx firebase-tools login",
+    "firebase-deploy": "npm run build && npx firebase-tools deploy"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

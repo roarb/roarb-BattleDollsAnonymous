@@ -2,8 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteField } from 'firebase/firestore';
-import { Settings as SettingsIcon, Save, Loader2, Target } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Loader2, Target, Trophy, Package, Waves, Scissors, SprayCan, Brush, CheckCircle, Flame, CalendarDays, Lock, CreditCard, Mountain, Wrench, Wind, Palette, Swords, Sun, Crown, Skull, Star } from 'lucide-react';
 import { motion } from 'motion/react';
+import { ACHIEVEMENTS } from '../data/achievements';
+
+const IconMap: Record<string, React.ElementType> = {
+  Package, Waves, Scissors, SprayCan, Brush, CheckCircle, Flame, CalendarDays, Trophy,
+  CreditCard, Mountain, Wrench, Wind, Palette, Swords, Sun, Crown, Skull, Star
+};
 
 interface ArmyList {
   id: string;
@@ -19,6 +25,7 @@ export function Settings() {
   const [availableFactions, setAvailableFactions] = useState<string[]>([]);
   const [availableArmies, setAvailableArmies] = useState<ArmyList[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
+  const [unlockedIds, setUnlockedIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -34,6 +41,7 @@ export function Settings() {
           } else if (data.targetFaction) {
             setTargetSelection(`faction:${data.targetFaction}`);
           }
+          setUnlockedIds(data.unlockedAchievements || []);
         }
 
         // Fetch available factions from collection
@@ -104,9 +112,9 @@ export function Settings() {
       <div className="border-b border-zinc-800 pb-6">
         <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
           <SettingsIcon className="mr-3 h-8 w-8 text-blue-500" />
-          Member Intake & Personal Protocols
+          Recovery Protocols
         </h1>
-        <p className="text-zinc-400 mt-1">Configure your dashboard metrics and personal preferences.</p>
+        <p className="text-zinc-400 mt-1">Set your targets so you can feel bad when you inevitably miss them.</p>
       </div>
 
       <motion.div 
@@ -173,6 +181,64 @@ export function Settings() {
           </div>
         </form>
       </motion.div>
+
+      <div className="pt-12 pb-6 border-b border-zinc-800 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
+            <Trophy className="mr-3 h-8 w-8 text-yellow-500" />
+            Trophy Room
+          </h1>
+          <p className="text-zinc-400 mt-1">A monument to your questionable life choices and occasional progress.</p>
+        </div>
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 min-w-[200px]">
+          <div className="flex justify-between items-end mb-2">
+            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Completion</span>
+            <span className="text-lg font-bold text-yellow-500">{unlockedIds.length} / {ACHIEVEMENTS.length}</span>
+          </div>
+          <div className="w-full bg-zinc-800 rounded-full h-2">
+            <div className="bg-yellow-500 h-2 rounded-full shadow-[0_0_10px_rgba(234,179,8,0.5)] transition-all duration-500" style={{ width: `${Math.round((unlockedIds.length / ACHIEVEMENTS.length) * 100)}%` }}></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {ACHIEVEMENTS.map((achievement, index) => {
+          const isUnlocked = unlockedIds.includes(achievement.id);
+          const IconComponent = IconMap[achievement.iconName] || Trophy;
+
+          return (
+            <motion.div
+              key={achievement.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className={`relative overflow-hidden rounded-2xl border ${isUnlocked ? 'bg-zinc-900/80 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)]' : 'bg-zinc-950/50 border-zinc-800/50 opacity-60'} p-6 transition-all`}
+            >
+              {isUnlocked && (
+                <div className="absolute -right-6 -top-6 w-24 h-24 bg-yellow-500/10 blur-2xl rounded-full pointer-events-none"></div>
+              )}
+              
+              <div className="flex items-start">
+                <div className={`flex-shrink-0 mr-4 p-3 rounded-full border ${isUnlocked ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-zinc-900 border-zinc-800'}`}>
+                  {isUnlocked ? (
+                    <IconComponent className="h-6 w-6 text-yellow-400" />
+                  ) : (
+                    <Lock className="h-6 w-6 text-zinc-600" />
+                  )}
+                </div>
+                <div>
+                  <h3 className={`text-lg font-bold ${isUnlocked ? 'text-white' : 'text-zinc-500'}`}>
+                    {achievement.title}
+                  </h3>
+                  <p className={`mt-1 text-sm ${isUnlocked ? 'text-zinc-300' : 'text-zinc-600'}`}>
+                    {isUnlocked ? achievement.description : 'Condition unknown. Keep building, painting, and pretending you\'ll finish your pile.'}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
     </div>
   );
 }

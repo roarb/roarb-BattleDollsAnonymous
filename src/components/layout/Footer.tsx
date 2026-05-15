@@ -11,10 +11,10 @@ export function Footer() {
     const encodedNote = encodeURIComponent(note || 'Relapse Jar');
     const venmoUrl = `venmo://paycharge?txn=pay&recipients=Robert-Hoehn-8&amount=${amount}&note=${encodedNote}`;
     const webFallback = `https://venmo.com/u/Robert-Hoehn-8`;
-    
+
     // Try deep link
     window.location.href = venmoUrl;
-    
+
     // Fallback
     setTimeout(() => {
       window.open(webFallback, '_blank');
@@ -42,16 +42,12 @@ export function Footer() {
                   <Lightbulb className="h-5 w-5" />
                   <span className="sr-only">Feature Requests</span>
                 </a>
-                <a href="#" className="text-zinc-500 hover:text-blue-400 transition-colors" title="Twitter / X">
+                <a href="https://x.com/DolliesWarAnon" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-blue-400 transition-colors" title="Twitter / X">
                   <Twitter className="h-5 w-5" />
                   <span className="sr-only">Twitter</span>
                 </a>
-                <a href="#" className="text-zinc-500 hover:text-blue-400 transition-colors" title="GitHub">
-                  <Github className="h-5 w-5" />
-                  <span className="sr-only">GitHub</span>
-                </a>
               </div>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(true)}
                 className="inline-flex items-center space-x-2 px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 hover:text-blue-300 transition-colors border border-blue-500/20 rounded-lg text-sm font-medium"
               >
@@ -81,7 +77,7 @@ export function Footer() {
             <div>
               <h3 className="text-white font-medium mb-3">Disclaimer</h3>
               <p className="text-xs leading-relaxed text-zinc-500">
-                This application is an unofficial hobby tracking and list building tool. It is not affiliated with, endorsed, sponsored, or specifically approved by Games Workshop Limited. 
+                This application is an unofficial hobby tracking and list building tool. It is not affiliated with, endorsed, sponsored, or specifically approved by Games Workshop Limited.
                 Warhammer, Warhammer 40,000, Age of Sigmar, and any associated logos, names, factions, and creatures are trademarks or registered trademarks of Games Workshop Limited. All rights reserved to their respective owners.
               </p>
             </div>
@@ -100,13 +96,13 @@ export function Footer() {
       {isModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
           <div className="bg-zinc-950 border border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-            <button 
-              onClick={() => setIsModalOpen(false)} 
+            <button
+              onClick={() => setIsModalOpen(false)}
               className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
-            
+
             <div className="text-center mb-6">
               <div className="mx-auto w-16 h-16 bg-blue-500/10 border-2 border-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mb-4">
                 <PaintBucket className="w-8 h-8" />
@@ -118,7 +114,7 @@ export function Footer() {
             </div>
 
             <div className="space-y-3">
-              <button 
+              <button
                 onClick={() => handleVenmoRedirect(5, "Relapse Jar - A Pot of Wash")}
                 className="w-full relative group bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-blue-500/50 p-4 rounded-xl flex items-center justify-between transition-all"
               >
@@ -134,7 +130,7 @@ export function Footer() {
                 <div className="text-zinc-300 font-medium">$5</div>
               </button>
 
-              <button 
+              <button
                 onClick={() => handleVenmoRedirect(20, "Heavy Relapse - A Combat Patrol")}
                 className="w-full relative group bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-red-500/50 p-4 rounded-xl flex items-center justify-between transition-all"
               >
@@ -154,26 +150,26 @@ export function Footer() {
             <div className="mt-6 pt-6 border-t border-zinc-800">
               <h3 className="text-sm font-medium text-white mb-3">Custom Confession</h3>
               <div className="space-y-3">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={confession}
                   onChange={(e) => setConfession(e.target.value)}
-                  placeholder="What did you buy?" 
+                  placeholder="What did you buy?"
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <div className="flex space-x-3">
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">$</span>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       min="1"
                       value={customAmount}
                       onChange={(e) => setCustomAmount(e.target.value)}
-                      placeholder="Amount" 
+                      placeholder="Amount"
                       className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 pl-7 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
-                  <button 
+                  <button
                     disabled={!customAmount}
                     onClick={() => handleVenmoRedirect(customAmount, `Relapse Confession: ${confession || 'Anonymous Plastic Crack'}`)}
                     className="flex-none px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-white text-sm font-medium rounded-lg transition-colors"
@@ -183,7 +179,7 @@ export function Footer() {
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-6 text-center">
               <p className="text-[10px] text-zinc-600">
                 You will be redirected to the Venmo app (or website). Thank you for supporting War Dollies Anonymous!

@@ -1,7 +1,8 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Shield, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { motion } from 'motion/react';
+import logo from '../assets/WarDollies_Logo.png';
 
 export function Login() {
   const { login } = useAuth();
@@ -13,17 +14,17 @@ export function Login() {
         animate={{ opacity: 1, y: 0 }}
         className="sm:mx-auto sm:w-full sm:max-w-md"
       >
-        <div className="flex justify-center">
-          <Shield className="h-16 w-16 text-blue-500" />
+        <div className="flex justify-center mb-8">
+          <img src={logo} alt="War Dollies Logo" className="h-32 w-auto drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]" />
         </div>
-        <h2 className="mt-6 text-center text-xl font-medium text-blue-400 tracking-wide uppercase">
+        <h2 className="mt-6 text-center text-xl font-medium text-blue-400 tracking-widest uppercase">
           War Dollies Anonymous
         </h2>
         <h1 className="mt-2 text-center text-4xl font-extrabold text-white tracking-tight">
           Admitting it<br />is the first step.
         </h1>
         <p className="mt-4 text-center text-lg text-zinc-400 max-w-xs mx-auto">
-          Your sprue-covered desk misses you. Let’s get those models tabletop ready.
+          Your unpainted pile is judging you right now. Let's pretend we're going to fix that.
         </p>
       </motion.div>
 
@@ -47,7 +48,7 @@ export function Login() {
               onClick={login}
               className="text-sm text-zinc-500 hover:text-blue-400 transition-colors underline underline-offset-4"
             >
-              Start your recovery. Create an account.
+              Accept your fate. Create an account.
             </button>
           </div>
         </div>

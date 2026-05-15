@@ -15,10 +15,13 @@ import { Settings } from './pages/Settings';
 import { Navbar } from './components/layout/Navbar';
 import { Background } from './components/layout/Background';
 import { Footer } from './components/layout/Footer';
+import { useAchievements } from './hooks/useAchievements';
+import { AchievementToast } from './components/AchievementToast';
 
 function AuthenticatedApp() {
   const { user } = useAuth();
   const [currentPath, setCurrentPath] = useState('dashboard');
+  const { recentUnlock, clearRecentUnlock } = useAchievements();
 
   React.useEffect(() => {
     const handleNavigate = (e: Event) => {
@@ -67,6 +70,7 @@ function AuthenticatedApp() {
         </main>
         <Footer />
       </div>
+      <AchievementToast achievement={recentUnlock} onClose={clearRecentUnlock} />
     </>
   );
 }
