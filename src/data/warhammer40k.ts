@@ -6,6 +6,8 @@ export interface ModelPoints {
 export interface ModelData {
   name: string;
   points: ModelPoints[];
+  msrp?: number;
+  productUrl?: string;
 }
 
 export interface FactionData {
@@ -19,9 +21,9 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
     models: [
       { name: "Aestred Thurga and Agathae Dolan", points: [{ qty: 2, pts: 70 }] },
       { name: "Arco-flagellants", points: [{ qty: 3, pts: 45 }, { qty: 10, pts: 140 }] },
-      { name: "Battle Sisters Squad", points: [{ qty: 10, pts: 105 }] },
+      { name: "Battle Sisters Squad", points: [{ qty: 10, pts: 105 }], msrp: 60, productUrl: "https://www.warhammer.com/en-US/shop/Adepta-Sororitas-Battle-Sisters-Squad-2020" },
       { name: "Canoness", points: [{ qty: 1, pts: 60 }] },
-      { name: "Castigator", points: [{ qty: 1, pts: 160 }] },
+      { name: "Castigator", points: [{ qty: 1, pts: 160 }], msrp: 90, productUrl: "https://www.warhammer.com/en-US/shop/Adepta-Sororitas-Castigator-2021" },
       { name: "Celestian Sacresants", points: [{ qty: 5, pts: 70 }, { qty: 10, pts: 140 }] },
       { name: "Exorcist", points: [{ qty: 1, pts: 210 }] },
       { name: "Immolator", points: [{ qty: 1, pts: 115 }] },
@@ -42,11 +44,11 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
       { name: "Aleya", points: [{ qty: 1, pts: 65 }] },
       { name: "Allarus Custodians", points: [{ qty: 2, pts: 110 }, { qty: 3, pts: 165 }, { qty: 5, pts: 275 }, { qty: 6, pts: 330 }] },
       { name: "Blade Champion", points: [{ qty: 1, pts: 120 }] },
-      { name: "Custodian Guard", points: [{ qty: 4, pts: 160 }, { qty: 5, pts: 200 }] },
+      { name: "Custodian Guard", points: [{ qty: 4, pts: 160 }, { qty: 5, pts: 200 }], msrp: 60, productUrl: "https://www.warhammer.com/en-US/shop/Adeptus-Custodes-Custodian-Guard-2018" },
       { name: "Custodian Wardens", points: [{ qty: 4, pts: 210 }, { qty: 5, pts: 260 }] },
       { name: "Prosecutors", points: [{ qty: 4, pts: 40 }, { qty: 5, pts: 50 }, { qty: 9, pts: 75 }, { qty: 10, pts: 85 }] },
       { name: "Shield-Captain", points: [{ qty: 1, pts: 120 }] },
-      { name: "Trajann Valoris", points: [{ qty: 1, pts: 140 }] },
+      { name: "Trajann Valoris", points: [{ qty: 1, pts: 140 }], msrp: 45, productUrl: "https://www.warhammer.com/en-US/shop/Adeptus-Custodes-Captain-General-Trajann-Valoris-2018" },
       { name: "Vertus Praetors", points: [{ qty: 2, pts: 150 }, { qty: 3, pts: 225 }] },
       { name: "Vigilators", points: [{ qty: 4, pts: 45 }, { qty: 5, pts: 55 }, { qty: 9, pts: 90 }, { qty: 10, pts: 100 }] },
       { name: "Witchseekers", points: [{ qty: 4, pts: 45 }, { qty: 5, pts: 55 }, { qty: 9, pts: 90 }, { qty: 10, pts: 100 }] },
@@ -153,8 +155,8 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
       { name: "Lokhust Lord", points: [{ qty: 1, pts: 80 }] },
       { name: "Lord", points: [{ qty: 1, pts: 65 }] },
       { name: "Lychguard", points: [{ qty: 5, pts: 85 }, { qty: 10, pts: 170 }] },
-      { name: "Monolith", points: [{ qty: 1, pts: 400 }] },
-      { name: "Necron Warriors", points: [{ qty: 10, pts: 90 }, { qty: 20, pts: 200 }] },
+      { name: "Monolith", points: [{ qty: 1, pts: 400 }], msrp: 170, productUrl: "https://www.warhammer.com/en-US/shop/Necron-Monolith-2020" },
+      { name: "Necron Warriors", points: [{ qty: 10, pts: 90 }, { qty: 20, pts: 200 }], msrp: 55, productUrl: "https://www.warhammer.com/en-US/shop/Necron-Warriors-2020" },
       { name: "Nekrosor Ammentar", points: [{ qty: 1, pts: 185 }] },
       { name: "Orikan the Diviner", points: [{ qty: 1, pts: 80 }] },
       { name: "Overlord", points: [{ qty: 1, pts: 85 }] },
@@ -180,7 +182,7 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
       { name: "Beastboss on Squigosaur", points: [{ qty: 1, pts: 110 }] },
       { name: "Big Mek", points: [{ qty: 1, pts: 70 }] },
       { name: "Big Mek in Mega Armour", points: [{ qty: 1, pts: 90 }] },
-      { name: "Boyz", points: [{ qty: 10, pts: 80 }, { qty: 20, pts: 170 }] },
+      { name: "Boyz", points: [{ qty: 10, pts: 80 }, { qty: 20, pts: 170 }], msrp: 55, productUrl: "https://www.warhammer.com/en-US/shop/Ork-Boyz-2021" },
       { name: "Deff Dread", points: [{ qty: 1, pts: 120 }] },
       { name: "Deffkoptas", points: [{ qty: 3, pts: 80 }, { qty: 6, pts: 160 }] },
       { name: "Flash Gitz", points: [{ qty: 5, pts: 80 }, { qty: 10, pts: 160 }] },
@@ -195,7 +197,7 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
       { name: "Mozrog Skragbad", points: [{ qty: 1, pts: 145 }] },
       { name: "Nobz", points: [{ qty: 5, pts: 105 }, { qty: 10, pts: 210 }] },
       { name: "Squighog Boyz", points: [{ qty: 4, pts: 150 }, { qty: 8, pts: 300 }] },
-      { name: "Stompa", points: [{ qty: 1, pts: 800 }] },
+      { name: "Stompa", points: [{ qty: 1, pts: 800 }], msrp: 140, productUrl: "https://www.warhammer.com/en-US/shop/Ork-Stompa" },
       { name: "Stormboyz", points: [{ qty: 5, pts: 65 }, { qty: 10, pts: 130 }] },
       { name: "Trukk", points: [{ qty: 1, pts: 70 }] },
       { name: "Warbikers", points: [{ qty: 3, pts: 65 }, { qty: 6, pts: 130 }] },
@@ -227,7 +229,7 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
       { name: "Incursor Squad", points: [{ qty: 5, pts: 80 }, { qty: 10, pts: 160 }] },
       { name: "Infernus Squad", points: [{ qty: 5, pts: 90 }, { qty: 10, pts: 180 }] },
       { name: "Infiltrator Squad", points: [{ qty: 5, pts: 100 }, { qty: 10, pts: 200 }] },
-      { name: "Intercessor Squad", points: [{ qty: 5, pts: 80 }, { qty: 10, pts: 160 }] },
+      { name: "Intercessor Squad", points: [{ qty: 5, pts: 80 }, { qty: 10, pts: 160 }], msrp: 60, productUrl: "https://www.warhammer.com/en-US/shop/Space-Marines-Primaris-Intercessors-2020" },
       { name: "Invader ATV", points: [{ qty: 1, pts: 60 }] },
       { name: "Invictor Tactical Warsuit", points: [{ qty: 1, pts: 125 }] },
       { name: "Land Raider", points: [{ qty: 1, pts: 220 }] },
@@ -238,7 +240,7 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
       { name: "Outrider Squad", points: [{ qty: 3, pts: 80 }, { qty: 6, pts: 160 }] },
       { name: "Predator Annihilator", points: [{ qty: 1, pts: 135 }] },
       { name: "Predator Destructor", points: [{ qty: 1, pts: 140 }] },
-      { name: "Redemptor Dreadnought", points: [{ qty: 1, pts: 205 }] },
+      { name: "Redemptor Dreadnought", points: [{ qty: 1, pts: 205 }], msrp: 75, productUrl: "https://www.warhammer.com/en-US/shop/Space-Marines-Primaris-Redemptor-Dreadnought-2020" },
       { name: "Repulsor", points: [{ qty: 1, pts: 180 }] },
       { name: "Repulsor Executioner", points: [{ qty: 1, pts: 230 }] },
       { name: "Rhino", points: [{ qty: 1, pts: 75 }] },
@@ -285,7 +287,7 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
   {
     name: "Tyranids",
     models: [
-      { name: "Barbgaunts", points: [{ qty: 5, pts: 55 }, { qty: 10, pts: 110 }] },
+      { name: "Barbgaunts", points: [{ qty: 5, pts: 55 }, { qty: 10, pts: 110 }], msrp: 48, productUrl: "https://www.warhammer.com/shop/tyranids-barbgaunts-2023" },
       { name: "Biovore", points: [{ qty: 1, pts: 50 }, { qty: 2, pts: 100 }, { qty: 3, pts: 150 }] },
       { name: "Broodlord", points: [{ qty: 1, pts: 80 }] },
       { name: "Carnifexes", points: [{ qty: 1, pts: 90 }, { qty: 2, pts: 180 }] },
@@ -300,7 +302,7 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
       { name: "Hive Tyrant", points: [{ qty: 1, pts: 195 }] },
       { name: "Hormagaunts", points: [{ qty: 10, pts: 65 }, { qty: 20, pts: 130 }] },
       { name: "Lictor", points: [{ qty: 1, pts: 60 }] },
-      { name: "Maleceptor", points: [{ qty: 1, pts: 170 }] },
+      { name: "Maleceptor", points: [{ qty: 1, pts: 170 }], msrp: 89, productUrl: "https://www.warhammer.com/en-US/shop/Maleceptor" },
       { name: "Mawloc", points: [{ qty: 1, pts: 135 }] },
       { name: "Neurogaunts", points: [{ qty: 11, pts: 45 }, { qty: 22, pts: 90 }] },
       { name: "Neurolictor", points: [{ qty: 1, pts: 70 }] },
@@ -316,7 +318,7 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
       { name: "Tervigon", points: [{ qty: 1, pts: 160 }] },
       { name: "The Swarmlord", points: [{ qty: 1, pts: 220 }] },
       { name: "Toxicrene", points: [{ qty: 1, pts: 150 }] },
-      { name: "Trygon", points: [{ qty: 1, pts: 140 }] },
+      { name: "Trygon", points: [{ qty: 1, pts: 140 }], msrp: 96, productUrl: "https://www.warhammer.com/en-US/shop/Tyranid-Trygon" },
       { name: "Tyranid Prime with Lash Whip", points: [{ qty: 1, pts: 85 }] },
       { name: "Tyranid Warriors with Melee Bio-weapons", points: [{ qty: 3, pts: 75 }, { qty: 6, pts: 150 }] },
       { name: "Tyranid Warriors with Ranged Bio-weapons", points: [{ qty: 3, pts: 65 }, { qty: 6, pts: 130 }] },

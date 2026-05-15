@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { Plus, Edit2, Trash2, Search, Filter, Database, ChevronUp, ChevronDown, ChevronsUpDown, Flame, Camera } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Filter, Database, ChevronUp, ChevronDown, ChevronsUpDown, Flame, Camera, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WARHAMMER_40K_DATA } from '../data/warhammer40k';
+import { AGE_OF_SIGMAR_DATA } from '../data/ageOfSigmar';
+import { OLD_WORLD_DATA } from '../data/oldWorld';
+import { HORUS_HERESY_DATA } from '../data/horusHeresy';
+import { MARVEL_CP_DATA } from '../data/marvelCP';
 import { ModelGallery } from '../components/ModelGallery';
 
 interface Model {
@@ -246,9 +250,18 @@ export function Collection() {
     );
   };
 
-  const selectedFactionData = formData.gameSystem === 'Warhammer 40k' 
-    ? WARHAMMER_40K_DATA.find(f => f.name === formData.faction) 
-    : undefined;
+  const getGameSystemData = (system: string) => {
+    switch (system) {
+      case 'Warhammer 40k': return WARHAMMER_40K_DATA;
+      case 'Age of Sigmar': return AGE_OF_SIGMAR_DATA;
+      case 'Warhammer Old World': return OLD_WORLD_DATA;
+      case 'Horus Heresy': return HORUS_HERESY_DATA;
+      case 'Marvel Crisis Protocol': return MARVEL_CP_DATA;
+      default: return [];
+    }
+  };
+
+  const selectedFactionData = getGameSystemData(formData.gameSystem || '').find(f => f.name === formData.faction);
     
   const selectedModelData = selectedFactionData 
     ? selectedFactionData.models.find(m => m.name === formData.modelName) 
@@ -352,17 +365,40 @@ export function Collection() {
                       </tr>
                     );
                     grouped[sys][fac].forEach(model => {
+                      const STATUS_PROGRESS = ['Unbuilt', 'Assembled', 'Primed', 'Painted', 'Tabletop Ready'];
+                      const bestImage = model.images
+                        ? [...STATUS_PROGRESS].reverse().reduce<string | null>((found, s) => found || model.images?.[s] || null, null)
+                        : null;
+
+                      const rowStatusClass = model.status === 'Tabletop Ready' ? 'border-l-4 border-l-blue-400 bg-blue-500/[0.03]'
+                        : model.status === 'Painted' ? 'border-l-4 border-l-blue-500 bg-blue-600/[0.03]'
+                        : model.status === 'Primed' ? 'border-l-4 border-l-amber-500 bg-amber-500/[0.02]'
+                        : model.status === 'Assembled' ? 'border-l-4 border-l-zinc-400 bg-zinc-500/[0.02]'
+                        : 'border-l-4 border-l-red-500/50 bg-red-500/[0.02]';
+
                       rows.push(
                         <motion.tr 
                           key={model.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="hover:bg-zinc-800/30 transition-colors"
+                          className={`${rowStatusClass} hover:bg-zinc-800/30 transition-colors`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-white">{model.modelName}</div>
-                            {model.nickname && <div className="text-xs text-zinc-500 italic mt-0.5">&quot;{model.nickname}&quot;</div>}
+                            <div className="flex items-center space-x-3">
+                              {bestImage && (
+                                <img
+                                  src={bestImage}
+                                  alt={model.modelName}
+                                  className="w-10 h-10 rounded-lg object-cover border border-zinc-700/50 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-blue-500/50 transition-all"
+                                  onClick={() => setGalleryModel(model)}
+                                />
+                              )}
+                              <div>
+                                <div className="text-sm font-medium text-white">{model.modelName}</div>
+                                {model.nickname && <div className="text-xs text-zinc-500 italic mt-0.5">&quot;{model.nickname}&quot;</div>}
+                              </div>
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">{model.gameSystem || 'Warhammer 40k'}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">{model.faction}</td>
@@ -380,9 +416,9 @@ export function Collection() {
                             <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-medium rounded-md border
                               ${model.status === 'Tabletop Ready' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
                                 model.status === 'Painted' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' : 
-                                model.status === 'Primed' ? 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' : 
+                                model.status === 'Primed' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
                                 model.status === 'Assembled' ? 'bg-zinc-600/10 text-zinc-300 border-zinc-600/20' : 
-                                'bg-zinc-700/10 text-zinc-500 border-zinc-700/20'}`}>
+                                'bg-red-500/10 text-red-400 border-red-500/20'}`}>
                               {model.status}
                             </span>
                           </td>
@@ -483,54 +519,71 @@ export function Collection() {
                                 type="text"
                                 name="faction"
                                 id="faction"
-                                list={formData.gameSystem === 'Warhammer 40k' ? '40k-factions' : undefined}
+                                list="system-factions"
                                 required
                                 value={formData.faction}
                                 onChange={(e) => setFormData({...formData, faction: e.target.value})}
                                 className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                               />
-                              {formData.gameSystem === 'Warhammer 40k' && (
-                                <datalist id="40k-factions">
-                                  {WARHAMMER_40K_DATA.map(f => (
-                                    <option key={f.name} value={f.name} />
-                                  ))}
-                                </datalist>
-                              )}
+                              <datalist id="system-factions">
+                                {getGameSystemData(formData.gameSystem || '').map(f => (
+                                  <option key={f.name} value={f.name} />
+                                ))}
+                              </datalist>
                             </div>
                           </div>
                           <div>
-                            <label htmlFor="modelName" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Asset Name</label>
+                            <div className="flex items-center justify-between">
+                              <label htmlFor="modelName" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Asset Name</label>
+                              {selectedModelData?.productUrl && (
+                                <a 
+                                  href={selectedModelData.productUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center transition-colors"
+                                >
+                                  View on Warhammer.com <ExternalLink className="ml-1 h-2.5 w-2.5" />
+                                </a>
+                              )}
+                            </div>
                             <input
                               type="text"
                               name="modelName"
                               id="modelName"
-                              list={selectedFactionData ? '40k-models' : undefined}
+                              list="system-models"
                               required
                               value={formData.modelName}
                               onChange={(e) => {
                                 const newModelName = e.target.value;
                                 let newQty = formData.qty;
                                 let newPoints = formData.pointsPerModel;
+                                let newCost = formData.unitCost;
                                 
-                                if (selectedFactionData) {
-                                  const modelData = selectedFactionData.models.find(m => m.name === newModelName);
-                                  if (modelData && modelData.points.length > 0) {
-                                    newQty = modelData.points[0].qty;
-                                    newPoints = Math.round(modelData.points[0].pts / newQty);
+                                const systemData = getGameSystemData(formData.gameSystem || '');
+                                const factionData = systemData.find(f => f.name === formData.faction);
+                                
+                                if (factionData) {
+                                  const modelData = factionData.models.find(m => m.name === newModelName);
+                                  if (modelData) {
+                                    if (modelData.points.length > 0) {
+                                      newQty = modelData.points[0].qty;
+                                      newPoints = Math.round(modelData.points[0].pts / newQty);
+                                    }
+                                    if (modelData.msrp) {
+                                      newCost = modelData.msrp;
+                                    }
                                   }
                                 }
                                 
-                                setFormData({...formData, modelName: newModelName, qty: newQty, pointsPerModel: newPoints});
+                                setFormData({...formData, modelName: newModelName, qty: newQty, pointsPerModel: newPoints, unitCost: newCost});
                               }}
                               className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                             />
-                            {selectedFactionData && (
-                              <datalist id="40k-models">
-                                {selectedFactionData.models.map(m => (
-                                  <option key={m.name} value={m.name} />
-                                ))}
-                              </datalist>
-                            )}
+                            <datalist id="system-models">
+                              {selectedFactionData?.models.map(m => (
+                                <option key={m.name} value={m.name} />
+                              ))}
+                            </datalist>
                           </div>
                           <div>
                             <label htmlFor="nickname" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Nickname / Description (Optional)</label>

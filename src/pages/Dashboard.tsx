@@ -4,8 +4,12 @@ import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, where, onSnapshot, doc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { motion } from 'motion/react';
-import { Package, CheckCircle, Activity, Flame, TrendingUp, Settings, Swords, ShieldOff, DollarSign, Clock } from 'lucide-react';
+import { Package, CheckCircle, Activity, Flame, TrendingUp, Settings, Swords, ShieldOff, DollarSign, Clock, ExternalLink } from 'lucide-react';
 import { WARHAMMER_40K_DATA } from '../data/warhammer40k';
+import { AGE_OF_SIGMAR_DATA } from '../data/ageOfSigmar';
+import { OLD_WORLD_DATA } from '../data/oldWorld';
+import { HORUS_HERESY_DATA } from '../data/horusHeresy';
+import { MARVEL_CP_DATA } from '../data/marvelCP';
 
 interface Model {
   id: string;
@@ -22,46 +26,13 @@ interface Model {
 }
 
 const STATUS_COLORS = {
-  'Unbuilt': '#52525b', // zinc-600
-  'Assembled': '#3b82f6', // blue-500
-  'Primed': '#eab308', // yellow-500
-  'Painted': '#d946ef', // blue-500
-  'Tabletop Ready': '#10b981', // emerald-500
+  'Unbuilt': '#f87171', // red-400
+  'Assembled': '#d4d4d8', // zinc-300
+  'Primed': '#fbbf24', // amber-400
+  'Painted': '#3b82f6', // blue-500
+  'Tabletop Ready': '#60a5fa', // blue-400
 };
 
-
-// Helper to generate last 90 days for heatmap
-const generateHeatmapData = (models: Model[]) => {
-  const days = 90;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const data = [];
-  const activityMap = new Map<string, number>();
-
-  // Count activity by date string (YYYY-MM-DD)
-  models.forEach(m => {
-    if (m.updatedAt && m.updatedAt.toDate) {
-      const date = m.updatedAt.toDate();
-      date.setHours(0, 0, 0, 0);
-      const dateStr = date.toISOString().split('T')[0];
-      // Give more weight to painted/ready models
-      const weight = ['Painted', 'Tabletop Ready'].includes(m.status) ? 3 : 1;
-      activityMap.set(dateStr, (activityMap.get(dateStr) || 0) + (m.qty * weight));
-    }
-  });
-
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
-    data.push({
-      date: dateStr,
-      count: activityMap.get(dateStr) || 0
-    });
-  }
-  return data;
-};
 
 // Helper to generate velocity data (last 6 months)
 const generateVelocityData = (models: Model[]) => {
@@ -115,9 +86,19 @@ export function Dashboard() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
 
-  const selectedFactionData = relapseFormData.gameSystem === 'Warhammer 40k'
-    ? WARHAMMER_40K_DATA.find(f => f.name === relapseFormData.faction)
-    : undefined;
+  const getGameSystemData = (system: string) => {
+    switch (system) {
+      case 'Warhammer 40k': return WARHAMMER_40K_DATA;
+      case 'Age of Sigmar': return AGE_OF_SIGMAR_DATA;
+      case 'Warhammer Old World': return OLD_WORLD_DATA;
+      case 'Horus Heresy': return HORUS_HERESY_DATA;
+      case 'Marvel Crisis Protocol': return MARVEL_CP_DATA;
+      default: return [];
+    }
+  };
+
+  const selectedFactionData = getGameSystemData(relapseFormData.gameSystem || '').find(f => f.name === relapseFormData.faction);
+    
   const selectedModelData = selectedFactionData
     ? selectedFactionData.models.find(m => m.name === relapseFormData.modelName)
     : undefined;
@@ -314,7 +295,6 @@ export function Dashboard() {
     return years === 1 ? '1 year' : `${years} years`;
   };
 
-  const heatmapData = generateHeatmapData(models);
   const velocityData = generateVelocityData(models);
 
   const pieData = [
@@ -325,13 +305,7 @@ export function Dashboard() {
     { name: 'Tabletop Ready', value: models.filter(m => m.status === 'Tabletop Ready').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Tabletop Ready'] },
   ].filter(d => d.value > 0);
 
-  const getHeatmapColor = (count: number) => {
-    if (count === 0) return 'bg-zinc-900 border-zinc-800';
-    if (count < 3) return 'bg-blue-900/40 border-blue-900/50';
-    if (count < 7) return 'bg-blue-700/60 border-blue-700/50';
-    if (count < 15) return 'bg-blue-500 border-blue-400';
-    return 'bg-blue-400 border-blue-300 shadow-[0_0_10px_rgba(232,121,249,0.5)]';
-  };
+
 
   return (
     <div className="space-y-8 pb-12">
@@ -433,12 +407,12 @@ export function Dashboard() {
               <AreaChart data={velocityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#d946ef" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#d946ef" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorAssembled" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#f87171" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#f87171" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
@@ -448,8 +422,8 @@ export function Dashboard() {
                   contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
                   itemStyle={{ color: '#fff' }}
                 />
-                <Area type="monotone" dataKey="assembled" name="WIP/Assembled" stroke="#3b82f6" fillOpacity={1} fill="url(#colorAssembled)" />
-                <Area type="monotone" dataKey="completed" name="Painted" stroke="#d946ef" strokeWidth={2} fillOpacity={1} fill="url(#colorCompleted)" />
+                <Area type="monotone" dataKey="assembled" name="WIP/Assembled" stroke="#f87171" fillOpacity={1} fill="url(#colorAssembled)" />
+                <Area type="monotone" dataKey="completed" name="Painted" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorCompleted)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -512,43 +486,6 @@ export function Dashboard() {
           )}
         </motion.div>
       </div>
-
-      {/* GitHub-style Heatmap */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-sm"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-medium text-white">Activity Heatmap</h2>
-          <div className="flex items-center space-x-2 text-xs text-zinc-500">
-            <span>Less</span>
-            <div className="flex space-x-1">
-              <div className="w-3 h-3 rounded-sm bg-zinc-900 border border-zinc-800"></div>
-              <div className="w-3 h-3 rounded-sm bg-blue-900/40 border border-blue-900/50"></div>
-              <div className="w-3 h-3 rounded-sm bg-blue-700/60 border border-blue-700/50"></div>
-              <div className="w-3 h-3 rounded-sm bg-blue-500 border border-blue-400"></div>
-              <div className="w-3 h-3 rounded-sm bg-blue-400 border border-blue-300 shadow-[0_0_5px_rgba(232,121,249,0.5)]"></div>
-            </div>
-            <span>More</span>
-          </div>
-        </div>
-        
-        <div className="overflow-x-auto custom-scrollbar pb-2">
-          <div className="min-w-[700px]">
-            <div className="grid grid-rows-7 grid-flow-col gap-1.5">
-              {heatmapData.map((day, i) => (
-                <div 
-                  key={i} 
-                  className={`w-3.5 h-3.5 rounded-sm border ${getHeatmapColor(day.count)} transition-all duration-200 hover:scale-125 hover:z-10 cursor-pointer`}
-                  title={`${day.date}: ${day.count} activity points`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </motion.div>
 
       {/* Ledger of Excess */}
       {unbuiltModels.length > 0 && (
@@ -630,46 +567,64 @@ export function Dashboard() {
                   <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Faction</label>
                   <input
                     type="text" required
-                    list={relapseFormData.gameSystem === 'Warhammer 40k' ? 'relapse-factions' : undefined}
+                    list="relapse-factions"
                     value={relapseFormData.faction}
                     onChange={e => setRelapseFormData({...relapseFormData, faction: e.target.value})}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
-                  {relapseFormData.gameSystem === 'Warhammer 40k' && (
-                    <datalist id="relapse-factions">
-                      {WARHAMMER_40K_DATA.map(f => <option key={f.name} value={f.name} />)}
-                    </datalist>
-                  )}
+                  <datalist id="relapse-factions">
+                    {getGameSystemData(relapseFormData.gameSystem || '').map(f => <option key={f.name} value={f.name} />)}
+                  </datalist>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">What did you buy?</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">What did you buy?</label>
+                  {selectedModelData?.productUrl && (
+                    <a 
+                      href={selectedModelData.productUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center transition-colors"
+                    >
+                      View on Warhammer.com <ExternalLink className="ml-1 h-2.5 w-2.5" />
+                    </a>
+                  )}
+                </div>
                 <input
                   type="text" required
-                  list={selectedFactionData ? 'relapse-models' : undefined}
+                  list="relapse-models"
                   value={relapseFormData.modelName}
                   onChange={e => {
                     const newName = e.target.value;
                     let newQty = relapseFormData.qty;
                     let newPoints = relapseFormData.pointsPerModel;
-                    if (selectedFactionData) {
-                      const md = selectedFactionData.models.find(m => m.name === newName);
-                      if (md && md.points.length > 0) {
-                        newQty = md.points[0].qty;
-                        newPoints = Math.round(md.points[0].pts / newQty);
+                    let newCost = relapseFormData.unitCost;
+                    
+                    const systemData = getGameSystemData(relapseFormData.gameSystem || '');
+                    const factionData = systemData.find(f => f.name === relapseFormData.faction);
+                    
+                    if (factionData) {
+                      const md = factionData.models.find(m => m.name === newName);
+                      if (md) {
+                        if (md.points.length > 0) {
+                          newQty = md.points[0].qty;
+                          newPoints = Math.round(md.points[0].pts / newQty);
+                        }
+                        if (md.msrp) {
+                          newCost = md.msrp;
+                        }
                       }
                     }
-                    setRelapseFormData({...relapseFormData, modelName: newName, qty: newQty, pointsPerModel: newPoints});
+                    setRelapseFormData({...relapseFormData, modelName: newName, qty: newQty, pointsPerModel: newPoints, unitCost: newCost});
                   }}
                   placeholder="e.g. Combat Patrol: Tyranids"
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
-                {selectedFactionData && (
-                  <datalist id="relapse-models">
-                    {selectedFactionData.models.map(m => <option key={m.name} value={m.name} />)}
-                  </datalist>
-                )}
+                <datalist id="relapse-models">
+                  {selectedFactionData?.models.map(m => <option key={m.name} value={m.name} />)}
+                </datalist>
               </div>
 
               <div>
