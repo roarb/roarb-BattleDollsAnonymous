@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { LogOut, LayoutDashboard, Package, Shield, Swords, Settings, History, Trophy } from 'lucide-react';
-import logo from '../../assets/WarDollies_Logo.png';
+import navLogo from '../../assets/WarDollies_Nav_Logo.png';
 
 export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNavigate: (path: string) => void }) {
   const { user, logout } = useAuth();
@@ -19,8 +19,13 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center flex-shrink-0">
-            <img src={logo} alt="War Dollies Logo" className="h-10 w-auto" />
-            <span className="hidden lg:block ml-3 text-xl font-bold text-white tracking-tight">War Dollies Anonymous</span>
+            <button 
+              onClick={() => onNavigate('dashboard')}
+              className="flex items-center hover:opacity-80 transition-opacity"
+            >
+              <img src={navLogo} alt="War Dollies Logo" className="h-10 w-auto" />
+              <span className="hidden lg:block ml-3 text-xl font-bold text-white tracking-tight">War Dollies Anonymous</span>
+            </button>
           </div>
           
           <div className="flex flex-1 justify-center md:justify-start md:ml-8 space-x-2 sm:space-x-6">

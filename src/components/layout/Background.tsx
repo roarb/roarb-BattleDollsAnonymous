@@ -25,36 +25,41 @@ const BACKGROUNDS = [
 ];
 
 export function Background() {
-  const [bg, setBg] = useState(BACKGROUNDS[0]);
+  // Initialize with a random background immediately to avoid flashes
+  const [bg] = useState(() => BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const selected = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
-    setBg(selected);
-    
     const img = new Image();
-    img.src = selected.url;
+    img.src = bg.url;
     img.onload = () => setLoaded(true);
-  }, []);
+    // If it fails, we still show the gradient/overlay so it's not just black
+    img.onerror = () => setLoaded(true);
+  }, [bg.url]);
 
   return (
     <>
-      {/* Base dark layer */}
-      <div className="fixed inset-0 z-[-3] bg-zinc-950" />
+      {/* Base layer with a deep space/grimdark gradient fallback */}
+      <div 
+        className="fixed inset-0 z-[-3] bg-zinc-950" 
+        style={{
+          background: 'radial-gradient(circle at center, #18181b 0%, #09090b 100%)'
+        }}
+      />
       
       {/* Blurred image layer */}
       <div 
-        className="fixed inset-0 z-[-2] bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
+        className="fixed inset-0 z-[-2] bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out"
         style={{ 
           backgroundImage: `url(${bg.url})`,
-          transform: 'scale(1.1)', // Prevent blurred edges from showing background color
+          transform: 'scale(1.1)', 
           opacity: loaded ? 1 : 0,
           ...bg.style
         }}
       />
       
-      {/* Overlay to ensure text readability and add a slight tint */}
-      <div className="fixed inset-0 z-[-1] bg-zinc-950/30 pointer-events-none" />
+      {/* Vignette and grain overlay to unify the look */}
+      <div className="fixed inset-0 z-[-1] bg-zinc-950/20 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.5)]" />
     </>
   );
 }

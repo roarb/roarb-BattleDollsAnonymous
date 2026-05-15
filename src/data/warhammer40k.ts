@@ -21,12 +21,12 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
     models: [
       { name: "Aestred Thurga and Agathae Dolan", points: [{ qty: 2, pts: 70 }] },
       { name: "Arco-flagellants", points: [{ qty: 3, pts: 45 }, { qty: 10, pts: 140 }] },
-      { name: "Battle Sisters Squad", points: [{ qty: 10, pts: 105 }], msrp: 60, productUrl: "https://www.warhammer.com/en-US/shop/Adepta-Sororitas-Battle-Sisters-Squad-2020" },
-      { name: "Canoness", points: [{ qty: 1, pts: 60 }] },
-      { name: "Castigator", points: [{ qty: 1, pts: 160 }], msrp: 90, productUrl: "https://www.warhammer.com/en-US/shop/Adepta-Sororitas-Castigator-2021" },
+      { name: "Battle Sisters Squad", points: [{ qty: 10, pts: 105 }], msrp: 65, productUrl: "https://www.warhammer.com/en-US/shop/Adepta-Sororitas-Battle-Sisters-Squad-2020" },
+      { name: "Canoness", points: [{ qty: 1, pts: 60 }], msrp: 43.50, productUrl: "https://www.warhammer.com/en-US/shop/Adepta-Sororitas-Canoness-2020" },
+      { name: "Castigator", points: [{ qty: 1, pts: 160 }], msrp: 92, productUrl: "https://www.warhammer.com/en-US/shop/Adepta-Sororitas-Castigator" },
       { name: "Celestian Sacresants", points: [{ qty: 5, pts: 70 }, { qty: 10, pts: 140 }] },
-      { name: "Exorcist", points: [{ qty: 1, pts: 210 }] },
-      { name: "Immolator", points: [{ qty: 1, pts: 115 }] },
+      { name: "Exorcist", points: [{ qty: 1, pts: 210 }], msrp: 92, productUrl: "https://www.warhammer.com/en-US/shop/Adepta-Sororitas-Exorcist-2020" },
+      { name: "Immolator", points: [{ qty: 1, pts: 115 }], msrp: 84, productUrl: "https://www.warhammer.com/en-US/shop/Adepta-Sororitas-Immolator-2020" },
       { name: "Morvenn Vahl", points: [{ qty: 1, pts: 185 }] },
       { name: "Paragon Warsuits", points: [{ qty: 3, pts: 210 }] },
       { name: "Penitent Engines", points: [{ qty: 1, pts: 75 }, { qty: 2, pts: 150 }] },
@@ -328,7 +328,7 @@ export const WARHAMMER_40K_DATA: FactionData[] = [
       { name: "Von Ryan's Leapers", points: [{ qty: 3, pts: 70 }, { qty: 6, pts: 140 }] },
       { name: "Winged Hive Tyrant", points: [{ qty: 1, pts: 170 }] },
       { name: "Winged Tyranid Prime", points: [{ qty: 1, pts: 65 }] },
-      { name: "Zoanthropes", points: [{ qty: 3, pts: 100 }, { qty: 6, pts: 200 }] }
+      { name: "Zoanthropes", points: [{ qty: 3, pts: 100 }, { qty: 6, pts: 200 }], msrp: 82, productUrl: "https://www.warhammer.com/en-US/shop/Zoanthropes" }
     ]
   }
 ];

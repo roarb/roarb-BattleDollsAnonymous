@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Github, Twitter, Lightbulb, Palette, X, Skull, PaintBucket, Coins } from 'lucide-react';
+import logo from '../../assets/WarDollies_Logo.png';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -28,11 +29,31 @@ export function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {/* Creator & Contact */}
             <div>
-              <h3 className="text-white font-medium mb-3">War Dollies Anonymous</h3>
-              <p className="text-sm mb-4">
+              <div className="flex flex-col mb-4">
+                <img src={logo} alt="War Dollies Logo" className="h-24 w-auto self-start mb-2 opacity-90" />
+                <h3 className="text-white font-bold text-lg tracking-tight">War Dollies Anonymous</h3>
+              </div>
+              <p className="text-sm">
                 Built by Rob Hoehn.<br />
                 Manage your pile of shame and conquer the tabletop.
               </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-white font-medium mb-3">Resources</h3>
+              <ul className="space-y-2 text-sm mb-6">
+                <li>
+                  <a href="mailto:rhoehn24@gmail.com?subject=Bug%20Report%20-%20Battle%20Dolls%20Anonymous" className="hover:text-white transition-colors">
+                    Report a Bug
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:rhoehn24@gmail.com?subject=Feature%20Request%20-%20Battle%20Dolls%20Anonymous" className="hover:text-white transition-colors">
+                    Suggest a Feature
+                  </a>
+                </li>
+              </ul>
               <div className="flex space-x-4 mb-6">
                 <a href="mailto:rhoehn24@gmail.com" className="text-zinc-500 hover:text-blue-400 transition-colors" title="Contact Creator">
                   <Mail className="h-5 w-5" />
@@ -49,28 +70,11 @@ export function Footer() {
               </div>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center space-x-2 px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 hover:text-blue-300 transition-colors border border-blue-500/20 rounded-lg text-sm font-medium"
+                className="inline-flex items-center space-x-2 px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 hover:text-blue-300 transition-colors border border-blue-500/20 rounded-lg text-sm font-medium w-full sm:w-auto justify-center"
               >
                 <Palette className="w-4 h-4" />
                 <span>The Relapse Jar</span>
               </button>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h3 className="text-white font-medium mb-3">Resources</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="mailto:rhoehn24@gmail.com?subject=Bug%20Report%20-%20Battle%20Dolls%20Anonymous" className="hover:text-white transition-colors">
-                    Report a Bug
-                  </a>
-                </li>
-                <li>
-                  <a href="mailto:rhoehn24@gmail.com?subject=Feature%20Request%20-%20Battle%20Dolls%20Anonymous" className="hover:text-white transition-colors">
-                    Suggest a Feature
-                  </a>
-                </li>
-              </ul>
             </div>
 
             {/* Legal Disclaimer */}
