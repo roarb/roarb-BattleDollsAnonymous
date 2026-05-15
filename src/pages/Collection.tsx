@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { Plus, Edit2, Trash2, Search, Filter, Database, ChevronUp, ChevronDown, ChevronsUpDown, Flame } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Filter, Database, ChevronUp, ChevronDown, ChevronsUpDown, Flame, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WARHAMMER_40K_DATA } from '../data/warhammer40k';
+import { ModelGallery } from '../components/ModelGallery';
 
 interface Model {
   id: string;
@@ -16,6 +17,7 @@ interface Model {
   unitCost?: number;
   faction: string;
   gameSystem?: string;
+  images?: Record<string, string>;
 }
 
 const STATUS_OPTIONS = ['Unbuilt', 'Assembled', 'Primed', 'Painted', 'Tabletop Ready'];
@@ -29,6 +31,7 @@ export function Collection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [galleryModel, setGalleryModel] = useState<Model | null>(null);
 
   const [formData, setFormData] = useState({
     modelName: '',
@@ -385,6 +388,9 @@ export function Collection() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400 font-mono">{model.pointsPerModel ? model.pointsPerModel * model.qty : '-'}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onClick={() => setGalleryModel(model)} className="text-zinc-500 hover:text-emerald-400 mr-4 transition-colors" title="Progress Photos">
+                              <Camera className="h-4 w-4" />
+                            </button>
                             <button onClick={() => openModal(model)} className="text-zinc-500 hover:text-blue-400 mr-4 transition-colors">
                               <Edit2 className="h-4 w-4" />
                             </button>
@@ -650,6 +656,18 @@ export function Collection() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Model Gallery */}
+      {galleryModel && (
+        <ModelGallery
+          model={galleryModel}
+          isOpen={!!galleryModel}
+          onClose={() => setGalleryModel(null)}
+          onImagesUpdated={() => {
+            // The onSnapshot listener will automatically refresh
+          }}
+        />
+      )}
     </div>
   );
 }
