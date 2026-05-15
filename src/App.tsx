@@ -8,10 +8,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Collection } from './pages/Collection';
-import { ArmyBuilder } from './pages/ArmyBuilder';
-import { Armies } from './pages/Armies';
+import { ArmyManager } from './pages/ArmyManager';
 import { Matches } from './pages/Matches';
 import { Settings } from './pages/Settings';
+import { Goals } from './pages/Goals';
 import { Navbar } from './components/layout/Navbar';
 import { Background } from './components/layout/Background';
 import { Footer } from './components/layout/Footer';
@@ -47,12 +47,12 @@ function AuthenticatedApp() {
         return <Dashboard />;
       case 'collection':
         return <Collection />;
-      case 'army-builder':
-        return <ArmyBuilder />;
-      case 'armies':
-        return <Armies />;
+      case 'army-manager':
+        return <ArmyManager />;
       case 'matches':
         return <Matches />;
+      case 'goals':
+        return <Goals />;
       case 'settings':
         return <Settings />;
       default:

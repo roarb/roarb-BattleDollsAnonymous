@@ -2,37 +2,86 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# Battle Dolls Anonymous 🎨⚔️
 
-This contains everything you need to run your app locally.
+**The Ultimate Accountability Mirror for Miniature Hobbyists.**
 
-View your app in AI Studio: https://ai.studio/apps/a5d5d405-77d7-48e2-a812-9a80a1802c6a
+Battle Dolls Anonymous is a premium web application designed to help hobbyists track their "Pile of Shame," celebrate hobby milestones, and maintain a consistent painting streak. It combines data-driven inventory management with a visual progress gallery to keep you motivated and accountable.
 
-## Run Locally
+---
 
-**Prerequisites:**  Node.js (v18 or higher recommended)
+## ✨ Key Features
 
-1. **Install dependencies:**
-   `npm install`
-2. **Setup environment variables:**
-   - Rename `.env.example` to `.env` (or create a `.env` file) and set your `GEMINI_API_KEY`.
-   - Rename `firebase-applet-config.json.example` to `firebase-applet-config.json` (or create it) and set your Firebase project details.
-3. **Generate Assets (Optional):**
-   - Run the image generation script to create background assets:
-     `npx tsx generate-images.ts`
-4. **Run the app:**
-   `npm run dev`
+### 📊 Accountability Dashboard
+*   **Hobby Streak Tracker**: Monitor your consistency with a gamified streak system.
+*   **Asset Distribution**: Visualize your collection's progress (Unbuilt vs. Tabletop Ready) via interactive charts.
+*   **Shame Accumulation**: Track your "relapses" (new purchases) over time to visualize cost and volume trends.
+*   **Achievement System**: Earn badges and milestone unlocks (e.g., "Two Thin Coats," "Vapor Inhaled") as you progress.
 
-## Publishing to Firestore
+### 📦 The Stash (Collection Management)
+*   **Detailed Inventory**: Track unit names, nicknames, quantities, points values, and MSRP.
+*   **Smart Auto-fill**: Pre-populated data for **Warhammer 40k**, **Age of Sigmar**, **The Old World**, **Horus Heresy**, and **Marvel Crisis Protocol**.
+*   **Status-Based Coloring**: Instantly identify unit readiness through color-coded rows (Red for Unbuilt, Blue for Painted, etc.).
+*   **Manufacturer Integration**: Direct links to product pages and automated MSRP tracking for cost analysis.
 
-To sync your data model (schema) and security rules with Google Cloud Firestore, use the following commands:
+### 📸 Model Progress Gallery
+*   **Four-Stage Tracking**: Document every step from *Assembled* to *Tabletop Ready*.
+*   **Before/After Sliders**: Interactive comparison tool to see the transformation of your models.
+*   **Visual Thumbnails**: Your Stash table automatically displays the most recently uploaded progress photo for each unit.
 
-1. **Login to Firebase:**
-   ```bash
-   npm run firebase-login
-   ```
-2. **Deploy Configuration and App:**
-   ```bash
-   npm run firebase-deploy
-   ```
-   This will build the app and deploy the security rules from `firestore.rules` (and the web app to Hosting) using the standard Firebase CLI.
+### 🛠️ Advanced Tools
+*   **Army Builder**: Plan your lists and see how they integrate with your existing collection.
+*   **Battle Logs**: Track your wins, losses, and mission performance.
+
+---
+
+## 🚀 Technology Stack
+
+*   **Frontend**: React (TypeScript), Vite, Tailwind CSS
+*   **Animations**: Framer Motion
+*   **Charts**: Recharts
+*   **Backend**: Firebase (Authentication, Firestore Database, Storage)
+*   **Icons**: Lucide React
+
+---
+
+## 🛠️ Getting Started
+
+### Prerequisites
+*   Node.js (v18 or higher)
+*   Firebase Project
+
+### Local Setup
+
+1.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+2.  **Environment Configuration:**
+    *   Create a `firebase-applet-config.json` in the root directory with your Firebase credentials.
+    *   (Optional) Set `GEMINI_API_KEY` in a `.env` file if utilizing AI features.
+3.  **Run Development Server:**
+    ```bash
+    npm run dev
+    ```
+
+### Deployment
+
+1.  **Login to Firebase:**
+    ```bash
+    npm run firebase-login
+    ```
+2.  **Deploy Rules & Hosting:**
+    ```bash
+    npm run firebase-deploy
+    ```
+
+---
+
+## 🔒 Security
+
+Battle Dolls Anonymous uses Firebase Security Rules to ensure that:
+*   Users can only view and edit their own hobby data.
+*   Images in Firebase Storage are scoped to individual user IDs.
+*   Admin-only data (like global game templates) is protected from unauthorized modification.
+

@@ -17,7 +17,7 @@ interface ArmyList {
   updatedAt: any;
 }
 
-export function Armies() {
+export function Armies({ onNavigateToBuilder }: { onNavigateToBuilder?: () => void }) {
   const { user } = useAuth();
   const [armies, setArmies] = useState<ArmyList[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,22 +109,7 @@ export function Armies() {
   }
 
   return (
-    <div className="space-y-8 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-            <Shield className="mr-3 h-8 w-8 text-blue-500" />
-            Delusions of Grandeur
-          </h1>
-          <p className="text-zinc-400 mt-1">Lists you've theory-crafted but probably don't have the painted models for yet.</p>
-        </div>
-        <button
-          onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'army-builder' }))}
-          className="inline-flex items-center px-5 py-2.5 border border-blue-500/30 rounded-lg shadow-[0_0_15px_rgba(217,70,239,0.15)] text-sm font-medium text-white bg-blue-600/10 hover:bg-blue-600/20 hover:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-950 transition-all duration-300"
-        >
-          Build New List
-        </button>
-      </div>
+    <div className="space-y-6">
 
       {armies.length === 0 ? (
         <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-12 text-center backdrop-blur-sm">
@@ -132,7 +117,7 @@ export function Armies() {
           <h3 className="text-lg font-medium text-white mb-2">No armies saved yet</h3>
           <p className="text-zinc-400 mb-6">Use the AI Army Strategist to generate and save your first list.</p>
           <button
-            onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'army-builder' }))}
+            onClick={() => onNavigateToBuilder ? onNavigateToBuilder() : window.dispatchEvent(new CustomEvent('navigate', { detail: 'army-builder' }))}
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors"
           >
             Go to Army Builder

@@ -9,10 +9,9 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
   const navItems = [
     { name: 'Dashboard', path: 'dashboard', icon: LayoutDashboard },
     { name: 'The Stash', path: 'collection', icon: Package },
-    { name: 'Army Builder', path: 'army-builder', icon: Shield },
-    { name: 'Saved Armies', path: 'armies', icon: Swords },
+    { name: 'Army Manager', path: 'army-manager', icon: Shield },
     { name: 'Battle Logs', path: 'matches', icon: History },
-    { name: 'Settings', path: 'settings', icon: Settings },
+    { name: 'Goals & Chips', path: 'goals', icon: Trophy },
   ];
 
   return (
@@ -48,11 +47,27 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
 
           <div className="flex items-center flex-shrink-0 ml-4">
             {user && (
-              <div className="flex items-center space-x-4">
-                <span className="hidden sm:block text-sm text-zinc-400">{user.displayName}</span>
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <button 
+                  onClick={() => onNavigate('settings')}
+                  className={`flex items-center space-x-3 p-1 pr-2 rounded-full transition-colors ${currentPath === 'settings' ? 'bg-zinc-800 border border-zinc-700' : 'hover:bg-zinc-800'}`}
+                >
+                  {user.photoURL && (
+                    <img 
+                      src={user.photoURL} 
+                      alt={user.displayName || 'Profile'} 
+                      className="h-8 w-8 rounded-full border border-zinc-700 shadow-sm"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
+                  <span className="hidden sm:block text-sm text-zinc-300 font-medium tracking-wide">
+                    {user.displayName}
+                  </span>
+                </button>
+                <div className="w-px h-5 bg-zinc-800 hidden sm:block"></div>
                 <button
                   onClick={logout}
-                  className="p-2 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                  className="p-2 rounded-full text-zinc-400 hover:text-red-400 hover:bg-zinc-800/50 transition-colors"
                   title="Logout"
                 >
                   <LogOut className="h-5 w-5" />
