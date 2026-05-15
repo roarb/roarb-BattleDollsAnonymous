@@ -6,7 +6,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { storage, db, handleFirestoreError, OperationType } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 
-const STATUS_ORDER = ['Assembled', 'Primed', 'Painted', 'Tabletop Ready'];
+const STATUS_ORDER = ['Assembled', 'Primed', 'Basic Paint', 'Completed'];
 
 interface ModelGalleryProps {
   model: {

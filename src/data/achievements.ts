@@ -5,7 +5,7 @@ export interface Achievement {
   iconName: string; // We'll map this to a Lucide icon
   conditionType: 'modelCount' | 'statusCount' | 'streak' | 'relapseCount';
   conditionValue: number;
-  conditionStatus?: string; // e.g., 'Painted', 'Tabletop Ready'
+  conditionStatus?: string; // e.g., 'Basic Paint', 'Completed'
 }
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -47,20 +47,20 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'actually-painting',
     title: 'Actually Painting',
-    description: 'Move a model to "Painted". Wait, you actually own brushes?',
+    description: 'Move a model to "Basic Paint". Wait, you actually own brushes?',
     iconName: 'Brush',
     conditionType: 'statusCount',
     conditionValue: 1,
-    conditionStatus: 'Painted',
+    conditionStatus: 'Basic Paint',
   },
   {
     id: 'tabletop-ready-squad',
-    title: 'Tabletop Ready',
-    description: 'Complete a 10-model squad to "Tabletop Ready". A rare sight.',
+    title: 'Completed',
+    description: 'Complete a 10-model squad to "Completed". A rare sight.',
     iconName: 'CheckCircle',
     conditionType: 'statusCount',
     conditionValue: 10,
-    conditionStatus: 'Tabletop Ready',
+    conditionStatus: 'Completed',
   },
   {
     id: 'the-relapser',
@@ -124,20 +124,20 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'master-basecoat',
     title: 'Master of the Basecoat',
-    description: 'Get 10 models to "Painted". Two thin coats, right?',
+    description: 'Get 10 models to "Basic Paint". Two thin coats, right?',
     iconName: 'Palette',
     conditionType: 'statusCount',
     conditionValue: 10,
-    conditionStatus: 'Painted',
+    conditionStatus: 'Basic Paint',
   },
   {
     id: 'functional-army',
     title: 'A Functional Army',
-    description: 'Get 30 models Tabletop Ready. Whoa, calm down there Duncan Rhodes.',
+    description: 'Get 30 models Completed. Whoa, calm down there Duncan Rhodes.',
     iconName: 'Swords',
     conditionType: 'statusCount',
     conditionValue: 30,
-    conditionStatus: 'Tabletop Ready',
+    conditionStatus: 'Completed',
   },
   {
     id: 'dedication',
@@ -166,10 +166,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'a-real-painter',
     title: 'A Real Painter',
-    description: '50 models Tabletop Ready. Wait, this app was meant as a joke, you\'re actually finishing them?',
+    description: '50 models Completed. Wait, this app was meant as a joke, you\'re actually finishing them?',
     iconName: 'Star',
     conditionType: 'statusCount',
     conditionValue: 50,
-    conditionStatus: 'Tabletop Ready',
+    conditionStatus: 'Completed',
   }
 ];

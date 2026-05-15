@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { Plus, Edit2, Trash2, Search, Filter, Database, ChevronUp, ChevronDown, ChevronsUpDown, Flame, Camera, ExternalLink } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Filter, Database, ChevronUp, ChevronDown, ChevronsUpDown, Flame, Camera, ExternalLink, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { HobbyPhaseGuide } from '../components/HobbyPhaseGuide';
 import { WARHAMMER_40K_DATA } from '../data/warhammer40k';
 import { AGE_OF_SIGMAR_DATA } from '../data/ageOfSigmar';
 import { OLD_WORLD_DATA } from '../data/oldWorld';
@@ -24,7 +25,7 @@ interface Model {
   images?: Record<string, string>;
 }
 
-const STATUS_OPTIONS = ['Unbuilt', 'Assembled', 'Primed', 'Painted', 'Tabletop Ready'];
+const STATUS_OPTIONS = ['Unbuilt', 'Assembled', 'Primed', 'Basic Paint', 'Completed'];
 
 export function Collection() {
   const { user } = useAuth();
@@ -36,6 +37,7 @@ export function Collection() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [galleryModel, setGalleryModel] = useState<Model | null>(null);
+  const [isHobbyGuideOpen, setIsHobbyGuideOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     modelName: '',
@@ -74,7 +76,7 @@ export function Collection() {
 
     try {
       let isForwardProgress = false;
-      const statusOrder = ['Unbuilt', 'Assembled', 'Primed', 'Painted', 'Tabletop Ready'];
+      const statusOrder = ['Unbuilt', 'Assembled', 'Primed', 'Basic Paint', 'Completed'];
 
       if (editingModel) {
         await updateDoc(doc(db, 'collection', editingModel.id), {
@@ -273,14 +275,23 @@ export function Collection() {
 
   return (
     <div className="space-y-8 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-            <Database className="mr-3 h-8 w-8 text-blue-500" />
-            The Pile of Shame Registry
-          </h1>
-          <p className="text-zinc-400 mt-1">Document every sprue you swore you'd paint before buying more.</p>
-        </div>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
+          <div className="flex items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
+                <Database className="mr-3 h-8 w-8 text-blue-500" />
+                The Stash
+              </h1>
+              <p className="text-zinc-400 mt-1">Inventory of your plastic addiction and unpainted shame.</p>
+            </div>
+            <button
+              onClick={() => setIsHobbyGuideOpen(true)}
+              className="ml-4 p-2 text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-full transition-all"
+              title="Hobby Phase Guide"
+            >
+              <Info className="w-6 h-6" />
+            </button>
+          </div>
         <button
           onClick={() => openModal()}
           className="inline-flex items-center px-5 py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/30 hover:border-red-500/50 rounded-lg text-sm font-medium transition-all duration-300"
@@ -365,13 +376,13 @@ export function Collection() {
                       </tr>
                     );
                     grouped[sys][fac].forEach(model => {
-                      const STATUS_PROGRESS = ['Unbuilt', 'Assembled', 'Primed', 'Painted', 'Tabletop Ready'];
+                      const STATUS_PROGRESS = ['Unbuilt', 'Assembled', 'Primed', 'Basic Paint', 'Completed'];
                       const bestImage = model.images
                         ? [...STATUS_PROGRESS].reverse().reduce<string | null>((found, s) => found || model.images?.[s] || null, null)
                         : null;
 
-                      const rowStatusClass = model.status === 'Tabletop Ready' ? 'border-l-4 border-l-blue-400 bg-blue-500/[0.03]'
-                        : model.status === 'Painted' ? 'border-l-4 border-l-blue-500 bg-blue-600/[0.03]'
+                      const rowStatusClass = model.status === 'Completed' ? 'border-l-4 border-l-blue-400 bg-blue-500/[0.03]'
+                        : model.status === 'Basic Paint' ? 'border-l-4 border-l-blue-500 bg-blue-600/[0.03]'
                         : model.status === 'Primed' ? 'border-l-4 border-l-amber-500 bg-amber-500/[0.02]'
                         : model.status === 'Assembled' ? 'border-l-4 border-l-zinc-400 bg-zinc-500/[0.02]'
                         : 'border-l-4 border-l-red-500/50 bg-red-500/[0.02]';
@@ -414,8 +425,8 @@ export function Collection() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
                             <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-medium rounded-md border
-                              ${model.status === 'Tabletop Ready' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
-                                model.status === 'Painted' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' : 
+                              ${model.status === 'Completed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
+                                model.status === 'Basic Paint' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' : 
                                 model.status === 'Primed' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
                                 model.status === 'Assembled' ? 'bg-zinc-600/10 text-zinc-300 border-zinc-600/20' : 
                                 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
@@ -721,6 +732,7 @@ export function Collection() {
           }}
         />
       )}
+      <HobbyPhaseGuide isOpen={isHobbyGuideOpen} onClose={() => setIsHobbyGuideOpen(false)} />
     </div>
   );
 }

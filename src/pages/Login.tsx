@@ -114,7 +114,7 @@ export function Login() {
           className="mt-24"
         >
           <div className="text-center mb-16">
-            <h3 className="text-zinc-500 uppercase tracking-[0.3em] text-sm font-bold mb-4">The 12 Steps to Tabletop Ready</h3>
+            <h3 className="text-zinc-500 uppercase tracking-[0.3em] text-sm font-bold mb-4">The 12 Steps to Completed</h3>
             <h2 className="text-3xl font-bold text-white">How we help you lie to yourself</h2>
           </div>
 

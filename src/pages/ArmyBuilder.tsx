@@ -99,7 +99,7 @@ export function ArmyBuilder({ onNavigateToSaved }: { onNavigateToSaved?: () => v
 
     try {
       // Filter for assembled/painted models of the selected faction and game system
-      const allowedStatuses = ['Assembled', 'Primed', 'Painted', 'Tabletop Ready'];
+      const allowedStatuses = ['Assembled', 'Primed', 'Basic Paint', 'Completed'];
       const availableModels = models.filter(m => 
         (m.gameSystem || 'Warhammer 40k') === selectedGameSystem &&
         m.faction === selectedFaction && 
@@ -124,7 +124,7 @@ Here is my current inventory of assembled and painted models:
 ${inventoryList}
 
 Using ONLY the models from my inventory above, construct the most competitive and legal army list possible for a ${targetPoints}-point game.
-CRITICAL INSTRUCTION: You MUST prioritize using models with the status "Painted" or "Tabletop Ready" over "Primed" or "Assembled". Only use "Primed" or "Assembled" models if absolutely necessary to reach the point limit or fulfill mandatory army requirements.
+CRITICAL INSTRUCTION: You MUST prioritize using models with the status "Basic Paint" or "Completed" over "Primed" or "Assembled". Only use "Primed" or "Assembled" models if absolutely necessary to reach the point limit or fulfill mandatory army requirements.
 
 If I don't have enough models to reach exactly ${targetPoints} points, get as close as possible without going over.
 If I don't have enough models to make a legal detachment/army, explain what I am missing and build the best list you can anyway.
@@ -266,9 +266,9 @@ Please format the output as a clean Markdown document with:
           <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-sm shadow-sm">
             <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-4">Available Forces (Assembled+)</h3>
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-              {models.filter(m => (m.gameSystem || 'Warhammer 40k') === selectedGameSystem && m.faction === selectedFaction && ['Assembled', 'Primed', 'Painted', 'Tabletop Ready'].includes(m.status)).length > 0 ? (
+              {models.filter(m => (m.gameSystem || 'Warhammer 40k') === selectedGameSystem && m.faction === selectedFaction && ['Assembled', 'Primed', 'Basic Paint', 'Completed'].includes(m.status)).length > 0 ? (
                 models
-                  .filter(m => (m.gameSystem || 'Warhammer 40k') === selectedGameSystem && m.faction === selectedFaction && ['Assembled', 'Primed', 'Painted', 'Tabletop Ready'].includes(m.status))
+                  .filter(m => (m.gameSystem || 'Warhammer 40k') === selectedGameSystem && m.faction === selectedFaction && ['Assembled', 'Primed', 'Basic Paint', 'Completed'].includes(m.status))
                   .map(m => (
                     <div key={m.id} className="flex justify-between text-sm items-center border-b border-zinc-800/50 pb-2 last:border-0 last:pb-0">
                       <span className="text-zinc-300 font-medium">{m.qty}x {m.modelName} <span className="text-xs text-zinc-500 font-normal ml-1">({m.status})</span></span>

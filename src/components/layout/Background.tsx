@@ -10,8 +10,8 @@ const BACKGROUNDS = [
   },
   {
     id: 'fantasy-fog',
-    // Dark misty mountains
-    url: 'https://images.unsplash.com/photo-1505506876778-7356270bc8cb?q=80&w=1920&auto=format&fit=crop',
+    // Dark misty mountains and forest
+    url: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=1920&auto=format&fit=crop',
     // Gritty muddy red/brown for a grimdark fantasy feel
     style: { filter: 'blur(4px) brightness(0.4) contrast(1.3) sepia(0.4) hue-rotate(-10deg)' } 
   },
@@ -21,6 +21,13 @@ const BACKGROUNDS = [
     url: 'https://images.unsplash.com/photo-1542261777448-23d2a287091c?q=80&w=1920&auto=format&fit=crop',
     // High contrast fire and sparks
     style: { filter: 'blur(3px) brightness(0.4) contrast(1.5) saturate(1.2)' } 
+  },
+  {
+    id: 'industrial-ruin',
+    // Dark industrial ruins
+    url: 'https://images.unsplash.com/photo-1536431311719-398b6704d4cc?q=80&w=1920&auto=format&fit=crop',
+    // Gritty, cold blue/gray industrial vibe
+    style: { filter: 'blur(4px) brightness(0.4) contrast(1.2) saturate(0.6) hue-rotate(190deg)' } 
   }
 ];
 

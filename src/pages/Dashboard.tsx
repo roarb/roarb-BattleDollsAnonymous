@@ -4,7 +4,8 @@ import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, where, onSnapshot, doc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { motion } from 'motion/react';
-import { Package, CheckCircle, Activity, Flame, TrendingUp, Settings, Swords, ShieldOff, DollarSign, Clock, ExternalLink } from 'lucide-react';
+import { Package, CheckCircle, Activity, Flame, TrendingUp, Settings, Swords, ShieldOff, DollarSign, Clock, ExternalLink, Info } from 'lucide-react';
+import { HobbyPhaseGuide } from '../components/HobbyPhaseGuide';
 import { WARHAMMER_40K_DATA } from '../data/warhammer40k';
 import { AGE_OF_SIGMAR_DATA } from '../data/ageOfSigmar';
 import { OLD_WORLD_DATA } from '../data/oldWorld';
@@ -29,8 +30,8 @@ const STATUS_COLORS = {
   'Unbuilt': '#f87171', // red-400
   'Assembled': '#d4d4d8', // zinc-300
   'Primed': '#fbbf24', // amber-400
-  'Painted': '#3b82f6', // blue-500
-  'Tabletop Ready': '#60a5fa', // blue-400
+  'Basic Paint': '#3b82f6', // blue-500
+  'Completed': '#60a5fa', // blue-400
 };
 
 
@@ -56,7 +57,7 @@ const generateVelocityData = (models: Model[]) => {
       const date = m.updatedAt.toDate();
       const monthData = data.find(d => d.month === date.getMonth() && d.year === date.getFullYear());
       if (monthData) {
-        if (['Painted', 'Tabletop Ready'].includes(m.status)) {
+        if (['Basic Paint', 'Completed'].includes(m.status)) {
           monthData.completed += m.qty;
         } else {
           monthData.assembled += m.qty;
@@ -85,6 +86,7 @@ export function Dashboard() {
   const [recoveryPlan, setRecoveryPlan] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [isHobbyGuideOpen, setIsHobbyGuideOpen] = useState(false);
 
   const getGameSystemData = (system: string) => {
     switch (system) {
@@ -236,7 +238,7 @@ export function Dashboard() {
   const activeFaction = targetArmy ? targetArmy.faction : targetFaction;
   const readinessModels = activeFaction ? models.filter(m => m.faction === activeFaction) : models;
   const targetTotal = readinessModels.reduce((acc, m) => acc + m.qty, 0);
-  const paintedCount = readinessModels.filter(m => ['Painted', 'Tabletop Ready'].includes(m.status)).reduce((acc, m) => acc + m.qty, 0);
+  const paintedCount = readinessModels.filter(m => ['Basic Paint', 'Completed'].includes(m.status)).reduce((acc, m) => acc + m.qty, 0);
   const completionRate = targetTotal > 0 ? Math.round((paintedCount / targetTotal) * 100) : 0;
   
   // Calculate Games Stats
@@ -247,7 +249,7 @@ export function Dashboard() {
 
   // Recovery Savings
   const paintedModelsTotalCost = models
-    .filter(m => ['Painted', 'Tabletop Ready'].includes(m.status))
+    .filter(m => ['Basic Paint', 'Completed'].includes(m.status))
     .reduce((acc, m) => acc + ((m as any).unitCost || 0), 0);
     
   const totalRelapseSpent = relapses.reduce((acc, r) => acc + (Number(r.msrp) || 0), 0);
@@ -269,7 +271,7 @@ export function Dashboard() {
 
   // Pile of Shame (total MSRP of non-completed units)
   const pileOfShameCost = models
-    .filter(m => !['Painted', 'Tabletop Ready'].includes(m.status))
+    .filter(m => !['Basic Paint', 'Completed'].includes(m.status))
     .reduce((acc, m) => acc + (m.unitCost || 0), 0);
 
   // Ledger of Excess (unbuilt kits sorted oldest first)
@@ -301,8 +303,8 @@ export function Dashboard() {
     { name: 'Unbuilt', value: models.filter(m => m.status === 'Unbuilt').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Unbuilt'] },
     { name: 'Assembled', value: models.filter(m => m.status === 'Assembled').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Assembled'] },
     { name: 'Primed', value: models.filter(m => m.status === 'Primed').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Primed'] },
-    { name: 'Painted', value: models.filter(m => m.status === 'Painted').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Painted'] },
-    { name: 'Tabletop Ready', value: models.filter(m => m.status === 'Tabletop Ready').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Tabletop Ready'] },
+    { name: 'Basic Paint', value: models.filter(m => m.status === 'Basic Paint').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Basic Paint'] },
+    { name: 'Completed', value: models.filter(m => m.status === 'Completed').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Completed'] },
   ].filter(d => d.value > 0);
 
 
@@ -358,7 +360,7 @@ export function Dashboard() {
           subtitle="Total MSRP of unfinished units"
           icon={DollarSign} 
           color="text-red-400"
-          trend={`${models.filter(m => !['Painted', 'Tabletop Ready'].includes(m.status)).length} units unfinished`}
+          trend={`${models.filter(m => !['Basic Paint', 'Completed'].includes(m.status)).length} units unfinished`}
         />
         <MetricCard 
           title="Actually Finished" 
@@ -436,7 +438,16 @@ export function Dashboard() {
           transition={{ delay: 0.1 }}
           className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-sm flex flex-col"
         >
-          <h2 className="text-lg font-medium text-white mb-6">Asset Distribution</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-medium text-white">Asset Distribution</h2>
+            <button
+              onClick={() => setIsHobbyGuideOpen(true)}
+              className="p-1.5 text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
+              title="Hobby Phase Guide"
+            >
+              <Info className="w-5 h-5" />
+            </button>
+          </div>
           <div className="flex-1 min-h-[200px] relative">
             {totalModels > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -709,6 +720,18 @@ export function Dashboard() {
           </div>
         </div>
       )}
+
+      {recoveryPlan && (
+        <motion.div 
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full shadow-2xl text-white font-medium"
+        >
+          {recoveryPlan}
+        </motion.div>
+      )}
+
+      <HobbyPhaseGuide isOpen={isHobbyGuideOpen} onClose={() => setIsHobbyGuideOpen(false)} />
     </div>
   );
 }
