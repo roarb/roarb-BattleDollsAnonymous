@@ -17,6 +17,8 @@ interface ArmyList {
   updatedAt: any;
 }
 
+import armyListsEmpty from '../assets/state/empty/army_lists.png';
+
 export function Armies({ onNavigateToBuilder }: { onNavigateToBuilder?: () => void }) {
   const { user } = useAuth();
   const [armies, setArmies] = useState<ArmyList[]>([]);
@@ -112,16 +114,25 @@ export function Armies({ onNavigateToBuilder }: { onNavigateToBuilder?: () => vo
     <div className="space-y-6">
 
       {armies.length === 0 ? (
-        <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-12 text-center backdrop-blur-sm">
-          <Shield className="mx-auto h-16 w-16 text-zinc-700 mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">No armies saved yet</h3>
-          <p className="text-zinc-400 mb-6">Use the AI Army Strategist to generate and save your first list.</p>
-          <button
-            onClick={() => onNavigateToBuilder ? onNavigateToBuilder() : window.dispatchEvent(new CustomEvent('navigate', { detail: 'army-builder' }))}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors"
-          >
-            Go to Army Builder
-          </button>
+        <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-8 md:p-12 text-center backdrop-blur-sm relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
+          <motion.img 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            src={armyListsEmpty} 
+            alt="No armies" 
+            className="mx-auto w-full max-w-sm mb-8 rounded-xl shadow-2xl border border-zinc-800/50 relative z-10"
+          />
+          <div className="relative z-10">
+            <h3 className="text-xl font-bold text-white mb-2">No armies saved yet</h3>
+            <p className="text-zinc-400 mb-8 max-w-md mx-auto">Use the AI Army Strategist to generate and save your first optimized list.</p>
+            <button
+              onClick={() => onNavigateToBuilder ? onNavigateToBuilder() : window.dispatchEvent(new CustomEvent('navigate', { detail: 'army-builder' }))}
+              className="inline-flex items-center px-6 py-3 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all hover:scale-105 active:scale-95"
+            >
+              Go to Army Builder
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">

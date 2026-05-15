@@ -27,6 +27,9 @@ interface Model {
 
 const STATUS_OPTIONS = ['Unbuilt', 'Assembled', 'Primed', 'Basic Paint', 'Completed'];
 
+import pileOfShameEmpty from '../assets/state/empty/pile_of_shame.png';
+import stashHeader from '../assets/graphics/header/the_stash.png';
+
 export function Collection() {
   const { user } = useAuth();
   const [models, setModels] = useState<Model[]>([]);
@@ -54,7 +57,7 @@ export function Collection() {
     if (!user) return;
 
     const q = query(collection(db, 'collection'), where('uid', '==', user.uid));
-    
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedModels: Model[] = [];
       snapshot.forEach((doc) => {
@@ -83,7 +86,7 @@ export function Collection() {
           ...formData,
           updatedAt: serverTimestamp()
         });
-        
+
         const oldIdx = statusOrder.indexOf(editingModel.status);
         const newIdx = statusOrder.indexOf(formData.status);
         if (newIdx > oldIdx) isForwardProgress = true;
@@ -100,16 +103,16 @@ export function Collection() {
       if (isForwardProgress) {
         const userRef = doc(db, 'users', user.uid);
         const userSnap = await getDoc(userRef);
-        
+
         if (userSnap.exists()) {
           const userData = userSnap.data();
           const todayDate = new Date();
           const today = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
-          
+
           const yesterdayDate = new Date();
           yesterdayDate.setDate(yesterdayDate.getDate() - 1);
           const yesterdayStr = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
-          
+
           const lastStreakDate = userData.lastStreakDate || '';
           let newStreak = userData.currentStreak || 0;
           let newBest = userData.bestStreak || 0;
@@ -184,10 +187,10 @@ export function Collection() {
   const filteredModels = models.filter(m => {
     const searchLower = searchQuery.toLowerCase();
     const systemStr = m.gameSystem || 'Warhammer 40k';
-    const matchesSearch = m.modelName.toLowerCase().includes(searchLower) || 
-                          (m.nickname && m.nickname.toLowerCase().includes(searchLower)) ||
-                          m.faction.toLowerCase().includes(searchLower) ||
-                          systemStr.toLowerCase().includes(searchLower);
+    const matchesSearch = m.modelName.toLowerCase().includes(searchLower) ||
+      (m.nickname && m.nickname.toLowerCase().includes(searchLower)) ||
+      m.faction.toLowerCase().includes(searchLower) ||
+      systemStr.toLowerCase().includes(searchLower);
     const matchesStatus = statusFilter === 'All' || m.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -233,8 +236,8 @@ export function Collection() {
   const SortableHeader = ({ label, sortKey }: { label: string, sortKey: string }) => {
     const isActive = sortConfig?.key === sortKey;
     return (
-      <th 
-        scope="col" 
+      <th
+        scope="col"
         className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-800/50 transition-colors group select-none"
         onClick={() => requestSort(sortKey)}
       >
@@ -264,9 +267,9 @@ export function Collection() {
   };
 
   const selectedFactionData = getGameSystemData(formData.gameSystem || '').find(f => f.name === formData.faction);
-    
-  const selectedModelData = selectedFactionData 
-    ? selectedFactionData.models.find(m => m.name === formData.modelName) 
+
+  const selectedModelData = selectedFactionData
+    ? selectedFactionData.models.find(m => m.name === formData.modelName)
     : undefined;
 
   if (loading) {
@@ -275,23 +278,23 @@ export function Collection() {
 
   return (
     <div className="space-y-8 pb-12">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
-          <div className="flex items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-                <Database className="mr-3 h-8 w-8 text-blue-500" />
-                The Stash
-              </h1>
-              <p className="text-zinc-400 mt-1">Inventory of your plastic addiction and unpainted shame.</p>
-            </div>
-            <button
-              onClick={() => setIsHobbyGuideOpen(true)}
-              className="ml-4 p-2 text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-full transition-all"
-              title="Hobby Phase Guide"
-            >
-              <Info className="w-6 h-6" />
-            </button>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
+        <div className="flex items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
+              <img src={stashHeader} alt="" className="mr-3 h-[80px] w-[80px] object-contain" />
+              The Stash
+            </h1>
+            <p className="text-zinc-400 mt-1">Inventory of your plastic addiction and unpainted shame.</p>
           </div>
+          <button
+            onClick={() => setIsHobbyGuideOpen(true)}
+            className="ml-4 p-2 text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-full transition-all"
+            title="Hobby Phase Guide"
+          >
+            <Info className="w-6 h-6" />
+          </button>
+        </div>
         <button
           onClick={() => openModal()}
           className="inline-flex items-center px-5 py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/30 hover:border-red-500/50 rounded-lg text-sm font-medium transition-all duration-300"
@@ -383,12 +386,12 @@ export function Collection() {
 
                       const rowStatusClass = model.status === 'Completed' ? 'border-l-4 border-l-blue-400 bg-blue-500/[0.03]'
                         : model.status === 'Basic Paint' ? 'border-l-4 border-l-blue-500 bg-blue-600/[0.03]'
-                        : model.status === 'Primed' ? 'border-l-4 border-l-amber-500 bg-amber-500/[0.02]'
-                        : model.status === 'Assembled' ? 'border-l-4 border-l-zinc-400 bg-zinc-500/[0.02]'
-                        : 'border-l-4 border-l-red-500/50 bg-red-500/[0.02]';
+                          : model.status === 'Primed' ? 'border-l-4 border-l-amber-500 bg-amber-500/[0.02]'
+                            : model.status === 'Assembled' ? 'border-l-4 border-l-zinc-400 bg-zinc-500/[0.02]'
+                              : 'border-l-4 border-l-red-500/50 bg-red-500/[0.02]';
 
                       rows.push(
-                        <motion.tr 
+                        <motion.tr
                           key={model.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -425,11 +428,11 @@ export function Collection() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
                             <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-medium rounded-md border
-                              ${model.status === 'Completed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
-                                model.status === 'Basic Paint' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' : 
-                                model.status === 'Primed' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                                model.status === 'Assembled' ? 'bg-zinc-600/10 text-zinc-300 border-zinc-600/20' : 
-                                'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+                              ${model.status === 'Completed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                                model.status === 'Basic Paint' ? 'bg-blue-600/10 text-blue-500 border-blue-600/20' :
+                                  model.status === 'Primed' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                    model.status === 'Assembled' ? 'bg-zinc-600/10 text-zinc-300 border-zinc-600/20' :
+                                      'bg-red-500/10 text-red-400 border-red-500/20'}`}>
                               {model.status}
                             </span>
                           </td>
@@ -453,8 +456,23 @@ export function Collection() {
                 return rows;
               })() : (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center text-sm text-zinc-500">
-                    Wow, an empty pile? Are you even in the hobby? Go buy something and come back.
+                  <td colSpan={9} className="px-6 py-20 text-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
+                    <motion.img
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      src={pileOfShameEmpty}
+                      alt="Empty Stash"
+                      className="mx-auto w-full max-w-sm mb-8 rounded-xl shadow-2xl border border-zinc-800/50"
+                    />
+                    <h3 className="text-xl font-bold text-white mb-2">Wow, an empty stash?</h3>
+                    <p className="text-zinc-500 max-w-sm mx-auto mb-8">Are you even in the hobby? Go buy something and come back (or admit to a relapse).</p>
+                    <button
+                      onClick={() => openModal()}
+                      className="inline-flex items-center px-6 py-3 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/30 rounded-xl font-bold transition-all hover:scale-105 active:scale-95"
+                    >
+                      <Plus className="mr-2 h-5 w-5" /> Admit to your first purchase
+                    </button>
                   </td>
                 </tr>
               )}
@@ -468,18 +486,18 @@ export function Collection() {
         {isModalOpen && (
           <div className="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-zinc-950/75 transition-opacity" 
-                aria-hidden="true" 
+                className="fixed inset-0 bg-zinc-950/75 transition-opacity"
+                aria-hidden="true"
                 onClick={closeModal}
               ></motion.div>
 
               <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -506,7 +524,7 @@ export function Collection() {
                                 id="gameSystem"
                                 required
                                 value={formData.gameSystem}
-                                onChange={(e) => setFormData({...formData, gameSystem: e.target.value})}
+                                onChange={(e) => setFormData({ ...formData, gameSystem: e.target.value })}
                                 className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                               >
                                 <option value="Warhammer 40k">Warhammer 40k</option>
@@ -533,7 +551,7 @@ export function Collection() {
                                 list="system-factions"
                                 required
                                 value={formData.faction}
-                                onChange={(e) => setFormData({...formData, faction: e.target.value})}
+                                onChange={(e) => setFormData({ ...formData, faction: e.target.value })}
                                 className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                               />
                               <datalist id="system-factions">
@@ -547,9 +565,9 @@ export function Collection() {
                             <div className="flex items-center justify-between">
                               <label htmlFor="modelName" className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Asset Name</label>
                               {selectedModelData?.productUrl && (
-                                <a 
-                                  href={selectedModelData.productUrl} 
-                                  target="_blank" 
+                                <a
+                                  href={selectedModelData.productUrl}
+                                  target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center transition-colors"
                                 >
@@ -569,10 +587,10 @@ export function Collection() {
                                 let newQty = formData.qty;
                                 let newPoints = formData.pointsPerModel;
                                 let newCost = formData.unitCost;
-                                
+
                                 const systemData = getGameSystemData(formData.gameSystem || '');
                                 const factionData = systemData.find(f => f.name === formData.faction);
-                                
+
                                 if (factionData) {
                                   const modelData = factionData.models.find(m => m.name === newModelName);
                                   if (modelData) {
@@ -585,8 +603,8 @@ export function Collection() {
                                     }
                                   }
                                 }
-                                
-                                setFormData({...formData, modelName: newModelName, qty: newQty, pointsPerModel: newPoints, unitCost: newCost});
+
+                                setFormData({ ...formData, modelName: newModelName, qty: newQty, pointsPerModel: newPoints, unitCost: newCost });
                               }}
                               className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                             />
@@ -604,7 +622,7 @@ export function Collection() {
                               id="nickname"
                               placeholder="e.g. Purple Sash, Squad Alpha..."
                               value={formData.nickname}
-                              onChange={(e) => setFormData({...formData, nickname: e.target.value})}
+                              onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
                               className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                             />
                           </div>
@@ -624,7 +642,7 @@ export function Collection() {
                                   const [qtyStr, totalPtsStr] = e.target.value.split('-');
                                   const qty = parseInt(qtyStr, 10);
                                   const totalPts = parseInt(totalPtsStr, 10);
-                                  setFormData({...formData, qty, pointsPerModel: Math.round(totalPts / qty)});
+                                  setFormData({ ...formData, qty, pointsPerModel: Math.round(totalPts / qty) });
                                 }}
                               >
                                 <option value="custom">Custom / Manual Entry</option>
@@ -646,7 +664,7 @@ export function Collection() {
                                 min="1"
                                 required
                                 value={formData.qty}
-                                onChange={(e) => setFormData({...formData, qty: parseInt(e.target.value) || 1})}
+                                onChange={(e) => setFormData({ ...formData, qty: parseInt(e.target.value) || 1 })}
                                 className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                               />
                             </div>
@@ -658,7 +676,7 @@ export function Collection() {
                                 id="pointsPerModel"
                                 min="0"
                                 value={formData.pointsPerModel}
-                                onChange={(e) => setFormData({...formData, pointsPerModel: parseInt(e.target.value) || 0})}
+                                onChange={(e) => setFormData({ ...formData, pointsPerModel: parseInt(e.target.value) || 0 })}
                                 className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                               />
                             </div>
@@ -673,7 +691,7 @@ export function Collection() {
                               step="0.01"
                               placeholder="e.g. 60.00"
                               value={formData.unitCost}
-                              onChange={(e) => setFormData({...formData, unitCost: e.target.value ? parseFloat(e.target.value) : ''})}
+                              onChange={(e) => setFormData({ ...formData, unitCost: e.target.value ? parseFloat(e.target.value) : '' })}
                               className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                             />
                           </div>
@@ -683,7 +701,7 @@ export function Collection() {
                               id="status"
                               name="status"
                               value={formData.status}
-                              onChange={(e) => setFormData({...formData, status: e.target.value})}
+                              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                               className="mt-2 block w-full border border-zinc-700/50 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-zinc-950 text-white transition-colors"
                             >
                               {STATUS_OPTIONS.map(status => (
@@ -698,11 +716,10 @@ export function Collection() {
                   <div className="bg-zinc-950/50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse border-t border-zinc-800/80">
                     <button
                       type="submit"
-                      className={`w-full inline-flex justify-center rounded-lg border shadow-[0_0_10px_rgba(217,70,239,0.1)] px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300 ${
-                        editingModel 
-                          ? 'border-blue-500/30 bg-blue-600/10 hover:bg-blue-600/20 hover:border-blue-500/50 focus:ring-blue-500' 
-                          : 'border-red-500/30 bg-red-600/10 hover:bg-red-600/20 hover:border-red-500/50 focus:ring-red-500 text-red-500'
-                      }`}
+                      className={`w-full inline-flex justify-center rounded-lg border shadow-[0_0_10px_rgba(217,70,239,0.1)] px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300 ${editingModel
+                        ? 'border-blue-500/30 bg-blue-600/10 hover:bg-blue-600/20 hover:border-blue-500/50 focus:ring-blue-500'
+                        : 'border-red-500/30 bg-red-600/10 hover:bg-red-600/20 hover:border-red-500/50 focus:ring-red-500 text-red-500'
+                        }`}
                     >
                       {editingModel ? 'Save Changes' : 'Log It'}
                     </button>

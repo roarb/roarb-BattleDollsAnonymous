@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteField } from 'firebase/firestore';
-import { 
-  Target, Medal, Package, Waves, Scissors, SprayCan, Brush, CheckCircle, 
-  Flame, CalendarDays, Lock, CreditCard, Mountain, Wrench, Wind, Palette, 
-  Swords, Sun, Crown, Skull, Star, Save, Loader2 
+import {
+  Target, Medal, Package, Waves, Scissors, SprayCan, Brush, CheckCircle,
+  Flame, CalendarDays, Lock, CreditCard, Mountain, Wrench, Wind, Palette,
+  Swords, Sun, Crown, Skull, Star, Save, Loader2
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ACHIEVEMENTS } from '../data/achievements';
@@ -21,6 +21,9 @@ interface ArmyList {
   faction: string;
 }
 
+import goalsEmpty from '../assets/state/empty/goals.png';
+import goalsHeader from '../assets/graphics/header/goals_and_chips.png';
+
 export function Goals() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -33,7 +36,7 @@ export function Goals() {
 
   useEffect(() => {
     if (!user) return;
-    
+
     const fetchSettingsAndData = async () => {
       try {
         // Fetch user settings
@@ -116,58 +119,82 @@ export function Goals() {
       {/* Target Section */}
       <div className="border-b border-zinc-800 pb-6">
         <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-          <Target className="mr-3 h-8 w-8 text-blue-500" />
+          <img src={goalsHeader} alt="" className="mr-3 h-[80px] w-[80px] object-contain" />
           Recovery Protocols
         </h1>
         <p className="text-zinc-400 mt-1">Focus your attention on a single goal before you get distracted by another shiny box.</p>
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-xl"
+        className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-xl overflow-hidden relative"
       >
-        <form onSubmit={handleSave} className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold text-white flex items-center mb-4">
-              <Target className="mr-2 h-5 w-5 text-blue-400" />
-              Primary Objective
-            </h2>
-            <p className="text-sm text-zinc-400 mb-4 leading-relaxed">
-              Redirect your "Combat Readiness" dashboard metric to a specific force. It's easier to pretend you're finishing an army if you stop looking at the other 1,000 unpainted models.
-            </p>
-            
-            <div className="max-w-md">
-              <label htmlFor="targetSelection" className="block text-xs font-medium text-zinc-500 uppercase tracking-widest mb-2">
-                Target Force
-              </label>
-              <select
-                id="targetSelection"
-                value={targetSelection}
-                onChange={(e) => setTargetSelection(e.target.value)}
-                className="block w-full bg-zinc-950 border border-zinc-800 rounded-lg shadow-sm py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm transition-all"
-              >
-                <option value="none">Entire Collection (All Shame Included)</option>
-                {availableArmies.length > 0 && (
-                  <optgroup label="Saved Armies">
-                    {availableArmies.map(army => (
-                      <option key={`army:${army.id}`} value={`army:${army.id}`}>
-                        {army.title} ({army.faction})
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {availableFactions.length > 0 && (
-                  <optgroup label="Factions">
-                    {availableFactions.map(faction => (
-                      <option key={`faction:${faction}`} value={`faction:${faction}`}>
-                        {faction}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
+
+        <form onSubmit={handleSave} className="space-y-6 relative z-10">
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold text-white flex items-center mb-4">
+                <Target className="mr-2 h-5 w-5 text-blue-400" />
+                Primary Objective
+              </h2>
+              <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
+                Redirect your "Combat Readiness" dashboard metric to a specific force. It's easier to pretend you're finishing an army if you stop looking at the other 1,000 unpainted models.
+              </p>
+
+              {targetSelection === 'none' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mb-8 block md:hidden"
+                >
+                  <img src={goalsEmpty} alt="Set a goal" className="w-full rounded-xl shadow-lg border border-zinc-800/50" />
+                </motion.div>
+              )}
+
+              <div className="max-w-md">
+                <label htmlFor="targetSelection" className="block text-xs font-medium text-zinc-500 uppercase tracking-widest mb-2">
+                  Target Force
+                </label>
+                <select
+                  id="targetSelection"
+                  value={targetSelection}
+                  onChange={(e) => setTargetSelection(e.target.value)}
+                  className="block w-full bg-zinc-950 border border-zinc-800 rounded-lg shadow-sm py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm transition-all"
+                >
+                  <option value="none">Entire Collection (All Shame Included)</option>
+                  {availableArmies.length > 0 && (
+                    <optgroup label="Saved Armies">
+                      {availableArmies.map(army => (
+                        <option key={`army:${army.id}`} value={`army:${army.id}`}>
+                          {army.title} ({army.faction})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {availableFactions.length > 0 && (
+                    <optgroup label="Factions">
+                      {availableFactions.map(faction => (
+                        <option key={`faction:${faction}`} value={`faction:${faction}`}>
+                          {faction}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              </div>
             </div>
+
+            {targetSelection === 'none' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                className="hidden md:block w-1/3 flex-shrink-0"
+              >
+                <img src={goalsEmpty} alt="Set a goal" className="w-full rounded-xl shadow-2xl border border-zinc-800/50" />
+              </motion.div>
+            )}
           </div>
 
           <div className="pt-6 border-t border-zinc-800/50 flex items-center justify-between">
@@ -190,7 +217,7 @@ export function Goals() {
       <div className="pt-12 pb-6 border-b border-zinc-800 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-            <Medal className="mr-3 h-8 w-8 text-amber-500" />
+            <img src={goalsHeader} alt="" className="mr-3 h-[80px] w-[80px] object-contain" />
             Milestone Chips
           </h1>
           <p className="text-zinc-400 mt-1">A collection of tokens proving you actually picked up a brush at least once.</p>
@@ -201,8 +228,8 @@ export function Goals() {
             <span className="text-xl font-black text-amber-500">{unlockedIds.length} / {ACHIEVEMENTS.length}</span>
           </div>
           <div className="w-full bg-zinc-800 rounded-full h-2 shadow-inner">
-            <div 
-              className="bg-gradient-to-r from-amber-600 to-amber-400 h-2 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-all duration-1000 ease-out" 
+            <div
+              className="bg-gradient-to-r from-amber-600 to-amber-400 h-2 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-all duration-1000 ease-out"
               style={{ width: `${Math.round((unlockedIds.length / ACHIEVEMENTS.length) * 100)}%` }}
             ></div>
           </div>
@@ -220,18 +247,16 @@ export function Goals() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.03 }}
-              className={`relative overflow-hidden rounded-2xl border ${
-                isUnlocked 
-                  ? 'bg-zinc-900/80 border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.05)]' 
-                  : 'bg-zinc-950/40 border-zinc-900/80 opacity-50'
-              } p-6 group transition-all duration-300 hover:border-zinc-700`}
+              className={`relative overflow-hidden rounded-2xl border ${isUnlocked
+                ? 'bg-zinc-900/80 border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.05)]'
+                : 'bg-zinc-950/40 border-zinc-900/80 opacity-50'
+                } p-6 group transition-all duration-300 hover:border-zinc-700`}
             >
               <div className="flex items-start">
-                <div className={`flex-shrink-0 mr-4 p-4 rounded-2xl border transition-all duration-500 ${
-                  isUnlocked 
-                    ? 'bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500/20' 
-                    : 'bg-zinc-900/50 border-zinc-800'
-                }`}>
+                <div className={`flex-shrink-0 mr-4 p-4 rounded-2xl border transition-all duration-500 ${isUnlocked
+                  ? 'bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500/20'
+                  : 'bg-zinc-900/50 border-zinc-800'
+                  }`}>
                   {isUnlocked ? (
                     <IconComponent className="h-7 w-7 text-amber-400" />
                   ) : (
@@ -247,7 +272,7 @@ export function Goals() {
                   </p>
                 </div>
               </div>
-              
+
               {isUnlocked && (
                 <div className="absolute top-2 right-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,1)]"></div>

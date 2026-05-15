@@ -21,7 +21,7 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
           <div className="flex items-center flex-shrink-0">
             <button 
               onClick={() => onNavigate('dashboard')}
-              className="flex items-center hover:opacity-80 transition-opacity"
+              className="flex items-center hover:opacity-80 transition-opacity cursor-pointer"
             >
               <img src={navLogo} alt="War Dollies Logo" className="h-10 w-auto" />
               <span className="hidden lg:block ml-3 text-xl font-bold text-white tracking-tight">War Dollies Anonymous</span>
@@ -40,7 +40,7 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
                     isActive
                       ? 'border-blue-500 text-white'
                       : 'border-transparent text-zinc-400 hover:border-zinc-300 hover:text-zinc-200'
-                  } inline-flex items-center px-2 md:px-1 pt-1 border-b-2 text-sm font-medium transition-colors`}
+                  } inline-flex items-center px-2 md:px-1 pt-1 border-b-2 text-sm font-medium transition-colors cursor-pointer`}
                   title={item.name}
                 >
                   <Icon className="h-6 w-6 md:mr-2 md:h-4 md:w-4" />
@@ -55,7 +55,7 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
               <div className="flex items-center space-x-3 sm:space-x-4">
                 <button 
                   onClick={() => onNavigate('settings')}
-                  className={`flex items-center space-x-3 p-1 pr-2 rounded-full transition-colors ${currentPath === 'settings' ? 'bg-zinc-800 border border-zinc-700' : 'hover:bg-zinc-800'}`}
+                  className={`flex items-center space-x-3 p-1 pr-2 rounded-full transition-colors cursor-pointer ${currentPath === 'settings' ? 'bg-zinc-800 border border-zinc-700' : 'hover:bg-zinc-800'}`}
                 >
                   {user.photoURL && (
                     <img 
@@ -72,7 +72,7 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
                 <div className="w-px h-5 bg-zinc-800 hidden sm:block"></div>
                 <button
                   onClick={logout}
-                  className="p-2 rounded-full text-zinc-400 hover:text-red-400 hover:bg-zinc-800/50 transition-colors"
+                  className="p-2 rounded-full text-zinc-400 hover:text-red-400 hover:bg-zinc-800/50 transition-colors cursor-pointer"
                   title="Logout"
                 >
                   <LogOut className="h-5 w-5" />

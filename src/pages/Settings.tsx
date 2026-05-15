@@ -5,6 +5,8 @@ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { User, Mail, Calendar, Camera, Save, Loader2, UserCircle, LogOut } from 'lucide-react';
 import { motion } from 'motion/react';
 
+import memberProfileHeader from '../assets/graphics/header/member_profile.png';
+
 export function Settings() {
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,7 @@ export function Settings() {
     <div className="max-w-3xl mx-auto space-y-8 pb-12">
       <div className="border-b border-zinc-800 pb-6">
         <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-          <UserCircle className="mr-3 h-8 w-8 text-blue-500" />
+          <img src={memberProfileHeader} alt="" className="mr-3 h-[80px] w-[80px] object-contain" />
           Member Profile
         </h1>
         <p className="text-zinc-400 mt-1">Manage your identity within the fellowship of plastic addicts.</p>

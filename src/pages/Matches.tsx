@@ -27,6 +27,9 @@ interface ArmyList {
   faction: string;
 }
 
+import battleLogsEmpty from '../assets/state/empty/battle_logs.png';
+import battleLogsHeader from '../assets/graphics/header/battle_logs.png';
+
 export function Matches() {
   const { user } = useAuth();
   const [games, setGames] = useState<GameRecord[]>([]);
@@ -155,7 +158,7 @@ export function Matches() {
     setCoachMessage(null);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-      const gamesSummary = games.map(g => 
+      const gamesSummary = games.map(g =>
         `Outcome: ${g.outcome}, Points: ${g.pointsFor || 0} to ${g.pointsAgainst || 0}, Opponent Faction: ${g.opponentFaction || 'Unknown'}, Notes: ${g.notes || 'None'}`
       ).join(' | ');
 
@@ -189,7 +192,7 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-            <Swords className="mr-3 h-8 w-8 text-blue-500" />
+            <img src={battleLogsHeader} alt="" className="mr-3 h-[80px] w-[80px] object-contain" />
             Tales of Gray Plastic
           </h1>
           <p className="text-zinc-400 mt-1">Log the games where your unpainted models inevitably rolled worse than your opponent's painted ones.</p>
@@ -227,23 +230,32 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
       )}
 
       {games.length === 0 ? (
-        <div className="text-center py-16 bg-zinc-900/50 backdrop-blur-sm border border-zinc-800/80 rounded-2xl">
-          <Swords className="mx-auto h-12 w-12 text-zinc-600 mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">No battles logged yet</h3>
-          <p className="text-zinc-500 max-w-sm mx-auto mb-6">Start recording your victories (and defeats) to gain insight into your army's performance.</p>
-          <button
-            onClick={() => handleOpenModal()}
-            className="inline-flex items-center px-4 py-2 border border-zinc-700 rounded-lg text-sm font-medium text-zinc-300 hover:text-white hover:bg-zinc-800"
-          >
-            <Plus className="mr-2 h-4 w-4" /> Log your first Match
-          </button>
+        <div className="text-center py-12 md:py-20 bg-zinc-900/50 backdrop-blur-sm border border-zinc-800/80 rounded-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
+          <motion.img
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            src={battleLogsEmpty}
+            alt="No battles"
+            className="mx-auto w-full max-w-md mb-8 rounded-xl shadow-2xl border border-zinc-800/50 relative z-10"
+          />
+          <div className="relative z-10">
+            <h3 className="text-xl font-bold text-white mb-2">No battles logged yet</h3>
+            <p className="text-zinc-500 max-w-sm mx-auto mb-8">Start recording your victories (and glorious defeats) to gain tactical insight into your army's performance.</p>
+            <button
+              onClick={() => handleOpenModal()}
+              className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95"
+            >
+              <Plus className="mr-2 h-5 w-5" /> Log your first Match
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {games.map(game => (
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
-              key={game.id} 
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              key={game.id}
               className="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-5 relative group flex flex-col"
             >
               <div className="flex justify-between items-start mb-3">
@@ -276,13 +288,13 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
               <h2 className="text-xl font-bold text-white">{editingGameId ? 'Edit Match' : 'Log Match'}</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-zinc-400 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
-            
+
             <form onSubmit={handleSaveGame} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-1">Your Army List (Optional)</label>
-                <select 
-                  value={armyListId} 
-                  onChange={e => setArmyListId(e.target.value)} 
+                <select
+                  value={armyListId}
+                  onChange={e => setArmyListId(e.target.value)}
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">-- None Selected --</option>
@@ -293,9 +305,9 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-3 sm:col-span-1">
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Outcome</label>
-                  <select 
-                    value={outcome} 
-                    onChange={e => setOutcome(e.target.value as any)} 
+                  <select
+                    value={outcome}
+                    onChange={e => setOutcome(e.target.value as any)}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     <option value="Win">Win</option>
@@ -305,14 +317,14 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
                 </div>
                 <div className="col-span-3 sm:col-span-1">
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Your Points</label>
-                  <input 
+                  <input
                     type="number" min="0" value={pointsFor} onChange={e => setPointsFor(e.target.value ? Number(e.target.value) : '')}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div className="col-span-3 sm:col-span-1">
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Opponent Pts</label>
-                  <input 
+                  <input
                     type="number" min="0" value={pointsAgainst} onChange={e => setPointsAgainst(e.target.value ? Number(e.target.value) : '')}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
@@ -322,14 +334,14 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Opponent Name</label>
-                  <input 
+                  <input
                     type="text" value={opponentName} onChange={e => setOpponentName(e.target.value)} placeholder="e.g. John D."
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Opp. Faction</label>
-                  <input 
+                  <input
                     type="text" value={opponentFaction} onChange={e => setOpponentFaction(e.target.value)} placeholder="e.g. Tyranids"
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
@@ -338,7 +350,7 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
 
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-1">Mission / Scenario</label>
-                <input 
+                <input
                   type="text" value={mission} onChange={e => setMission(e.target.value)} placeholder="e.g. Scorched Earth"
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
@@ -346,7 +358,7 @@ Provide a brief, encouraging 2-3 paragraph summary and some tactical advice base
 
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-1">Notes / Summary</label>
-                <textarea 
+                <textarea
                   value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Highlights, what worked, what failed..."
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />

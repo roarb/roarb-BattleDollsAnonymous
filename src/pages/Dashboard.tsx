@@ -4,7 +4,7 @@ import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, where, onSnapshot, doc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { motion } from 'motion/react';
-import { Package, CheckCircle, Activity, Flame, TrendingUp, Settings, Swords, ShieldOff, DollarSign, Clock, ExternalLink, Info } from 'lucide-react';
+import { Package, CheckCircle, Activity, Flame, TrendingUp, Settings, Swords, ShieldOff, DollarSign, Clock, ExternalLink, Info, Trophy } from 'lucide-react';
 import { HobbyPhaseGuide } from '../components/HobbyPhaseGuide';
 import { WARHAMMER_40K_DATA } from '../data/warhammer40k';
 import { AGE_OF_SIGMAR_DATA } from '../data/ageOfSigmar';
@@ -40,7 +40,7 @@ const generateVelocityData = (models: Model[]) => {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const data = [];
   const today = new Date();
-  
+
   for (let i = 5; i >= 0; i--) {
     const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
     data.push({
@@ -69,12 +69,14 @@ const generateVelocityData = (models: Model[]) => {
   return data;
 };
 
+import accountabilityMirrorHeader from '../assets/graphics/header/accountability_mirror.png';
+
 export function Dashboard() {
   const { user } = useAuth();
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
   const [targetFaction, setTargetFaction] = useState<string | null>(null);
-  const [targetArmy, setTargetArmy] = useState<{title: string, faction: string} | null>(null);
+  const [targetArmy, setTargetArmy] = useState<{ title: string, faction: string } | null>(null);
   const [games, setGames] = useState<any[]>([]);
   const [relapses, setRelapses] = useState<any[]>([]);
   const [isRelapseModalOpen, setIsRelapseModalOpen] = useState(false);
@@ -100,7 +102,7 @@ export function Dashboard() {
   };
 
   const selectedFactionData = getGameSystemData(relapseFormData.gameSystem || '').find(f => f.name === relapseFormData.faction);
-    
+
   const selectedModelData = selectedFactionData
     ? selectedFactionData.models.find(m => m.name === relapseFormData.modelName)
     : undefined;
@@ -118,7 +120,7 @@ export function Dashboard() {
             if (armyDoc.exists()) {
               setTargetArmy({ title: armyDoc.data().title, faction: armyDoc.data().faction });
             }
-          } catch (e) {}
+          } catch (e) { }
         } else if (data.targetFaction) {
           setTargetFaction(data.targetFaction);
         }
@@ -126,11 +128,11 @@ export function Dashboard() {
         const todayDate = new Date();
         const today = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
         const lastDate = data.lastStreakDate || '';
-        
+
         const yesterdayDate = new Date();
         yesterdayDate.setDate(yesterdayDate.getDate() - 1);
         const yesterdayStr = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
-        
+
         if (lastDate !== today && lastDate !== yesterdayStr && data.currentStreak > 0) {
           setCurrentStreak(0);
         } else {
@@ -141,7 +143,7 @@ export function Dashboard() {
     });
 
     const q = query(collection(db, 'collection'), where('uid', '==', user.uid));
-    
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedModels: Model[] = [];
       snapshot.forEach((doc) => {
@@ -233,25 +235,25 @@ export function Dashboard() {
   }
 
   const totalModels = models.reduce((acc, m) => acc + m.qty, 0);
-  
+
   // Calculate Combat Readiness based on target faction if set
   const activeFaction = targetArmy ? targetArmy.faction : targetFaction;
   const readinessModels = activeFaction ? models.filter(m => m.faction === activeFaction) : models;
   const targetTotal = readinessModels.reduce((acc, m) => acc + m.qty, 0);
   const paintedCount = readinessModels.filter(m => ['Basic Paint', 'Completed'].includes(m.status)).reduce((acc, m) => acc + m.qty, 0);
   const completionRate = targetTotal > 0 ? Math.round((paintedCount / targetTotal) * 100) : 0;
-  
+
   // Calculate Games Stats
   const totalGames = games.length;
   const wins = games.filter(g => g.outcome === 'Win').length;
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
-  
+
 
   // Recovery Savings
   const paintedModelsTotalCost = models
     .filter(m => ['Basic Paint', 'Completed'].includes(m.status))
     .reduce((acc, m) => acc + ((m as any).unitCost || 0), 0);
-    
+
   const totalRelapseSpent = relapses.reduce((acc, r) => acc + (Number(r.msrp) || 0), 0);
   const recoverySavingsRaw = paintedModelsTotalCost - totalRelapseSpent;
   const recoverySavings = recoverySavingsRaw > 0 ? recoverySavingsRaw : 0;
@@ -300,11 +302,11 @@ export function Dashboard() {
   const velocityData = generateVelocityData(models);
 
   const pieData = [
-    { name: 'Unbuilt', value: models.filter(m => m.status === 'Unbuilt').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Unbuilt'] },
-    { name: 'Assembled', value: models.filter(m => m.status === 'Assembled').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Assembled'] },
-    { name: 'Primed', value: models.filter(m => m.status === 'Primed').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Primed'] },
-    { name: 'Basic Paint', value: models.filter(m => m.status === 'Basic Paint').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Basic Paint'] },
-    { name: 'Completed', value: models.filter(m => m.status === 'Completed').reduce((a,b) => a+b.qty, 0), color: STATUS_COLORS['Completed'] },
+    { name: 'Unbuilt', value: models.filter(m => m.status === 'Unbuilt').reduce((a, b) => a + b.qty, 0), color: STATUS_COLORS['Unbuilt'] },
+    { name: 'Assembled', value: models.filter(m => m.status === 'Assembled').reduce((a, b) => a + b.qty, 0), color: STATUS_COLORS['Assembled'] },
+    { name: 'Primed', value: models.filter(m => m.status === 'Primed').reduce((a, b) => a + b.qty, 0), color: STATUS_COLORS['Primed'] },
+    { name: 'Basic Paint', value: models.filter(m => m.status === 'Basic Paint').reduce((a, b) => a + b.qty, 0), color: STATUS_COLORS['Basic Paint'] },
+    { name: 'Completed', value: models.filter(m => m.status === 'Completed').reduce((a, b) => a + b.qty, 0), color: STATUS_COLORS['Completed'] },
   ].filter(d => d.value > 0);
 
 
@@ -314,7 +316,7 @@ export function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
-            <Activity className="mr-3 h-8 w-8 text-blue-500" />
+            <img src={accountabilityMirrorHeader} alt="" className="mr-3 h-[80px] w-[80px] object-contain" />
             The Accountability Mirror
           </h1>
           <p className="text-zinc-400 mt-1">Look upon your Pile of Shame, ye mighty, and despair. (Or just track your addiction).</p>
@@ -346,45 +348,45 @@ export function Dashboard() {
 
       {/* Top Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <MetricCard 
-          title="Days Sober" 
-          value={daysSober !== null ? daysSober : '∞'} 
+        <MetricCard
+          title="Days Sober"
+          value={daysSober !== null ? daysSober : '∞'}
           subtitle={daysSober !== null ? (daysSober === 0 ? "You relapsed today. Shameful." : "Since your last plastic purchase") : "No relapses on record. Suspicious."}
-          icon={Clock} 
+          icon={Clock}
           color={daysSober !== null && daysSober < 7 ? "text-red-500" : "text-emerald-500"}
           trend={lastRelapseDate ? `Last: ${lastRelapseDate.toLocaleDateString()}` : "Clean record"}
         />
-        <MetricCard 
-          title="Pile of Shame" 
-          value={`$${pileOfShameCost.toLocaleString()}`} 
+        <MetricCard
+          title="Pile of Shame"
+          value={`$${pileOfShameCost.toLocaleString()}`}
           subtitle="Total MSRP of unfinished units"
-          icon={DollarSign} 
+          icon={DollarSign}
           color="text-red-400"
           trend={`${models.filter(m => !['Basic Paint', 'Completed'].includes(m.status)).length} units unfinished`}
         />
-        <MetricCard 
-          title="Actually Finished" 
-          value={`${completionRate}%`} 
+        <MetricCard
+          title="Actually Finished"
+          value={`${completionRate}%`}
           subtitle={`${paintedCount} fully painted`}
-          icon={CheckCircle} 
+          icon={CheckCircle}
           color="text-blue-500"
           trend={targetArmy ? `Target: ${targetArmy.title}` : targetFaction ? `Target: ${targetFaction}` : "Target: Entire Collection"}
-          onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'settings' }))}
-          actionIcon={Settings}
+          onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'goals' }))}
+          actionIcon={Trophy}
         />
-        <MetricCard 
-          title="Recovery Savings" 
-          value={`$${recoverySavings.toLocaleString()}`} 
+        <MetricCard
+          title="Recovery Savings"
+          value={`$${recoverySavings.toLocaleString()}`}
           subtitle="Total MSRP of completed units"
-          icon={TrendingUp} 
+          icon={TrendingUp}
           color="text-emerald-500"
           trend={`Minus $${totalRelapseSpent.toLocaleString()} spent on relapses`}
         />
-        <MetricCard 
-          title="Hobby Streak" 
-          value={`${currentStreak} Days`} 
+        <MetricCard
+          title="Hobby Streak"
+          value={`${currentStreak} Days`}
           subtitle="Consecutive days of forward progress"
-          icon={Flame} 
+          icon={Flame}
           color="text-orange-500"
           trend={`Personal best: ${bestStreak}`}
         />
@@ -392,7 +394,7 @@ export function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Hobby Velocity Chart */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="lg:col-span-2 bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-sm"
@@ -409,18 +411,18 @@ export function Dashboard() {
               <AreaChart data={velocityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorAssembled" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f87171" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#f87171" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#f87171" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#f87171" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                 <XAxis dataKey="name" stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
                   itemStyle={{ color: '#fff' }}
                 />
@@ -432,7 +434,7 @@ export function Dashboard() {
         </motion.div>
 
         {/* Readiness Distribution */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -466,7 +468,7 @@ export function Dashboard() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#fff' }}
                     itemStyle={{ color: '#fff' }}
                   />
@@ -500,7 +502,7 @@ export function Dashboard() {
 
       {/* Ledger of Excess */}
       {unbuiltModels.length > 0 && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -549,7 +551,7 @@ export function Dashboard() {
               Log a Relapse
             </h2>
             <p className="text-zinc-400 text-sm mb-6">Admit it. You bought more plastic. This will add the unit to your Stash as Unbuilt.</p>
-            
+
             <form onSubmit={handleSaveRelapse} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -557,7 +559,7 @@ export function Dashboard() {
                   <select
                     required
                     value={relapseFormData.gameSystem}
-                    onChange={e => setRelapseFormData({...relapseFormData, gameSystem: e.target.value})}
+                    onChange={e => setRelapseFormData({ ...relapseFormData, gameSystem: e.target.value })}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
                   >
                     <option value="Warhammer 40k">Warhammer 40k</option>
@@ -580,7 +582,7 @@ export function Dashboard() {
                     type="text" required
                     list="relapse-factions"
                     value={relapseFormData.faction}
-                    onChange={e => setRelapseFormData({...relapseFormData, faction: e.target.value})}
+                    onChange={e => setRelapseFormData({ ...relapseFormData, faction: e.target.value })}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                   <datalist id="relapse-factions">
@@ -593,9 +595,9 @@ export function Dashboard() {
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">What did you buy?</label>
                   {selectedModelData?.productUrl && (
-                    <a 
-                      href={selectedModelData.productUrl} 
-                      target="_blank" 
+                    <a
+                      href={selectedModelData.productUrl}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center transition-colors"
                     >
@@ -612,10 +614,10 @@ export function Dashboard() {
                     let newQty = relapseFormData.qty;
                     let newPoints = relapseFormData.pointsPerModel;
                     let newCost = relapseFormData.unitCost;
-                    
+
                     const systemData = getGameSystemData(relapseFormData.gameSystem || '');
                     const factionData = systemData.find(f => f.name === relapseFormData.faction);
-                    
+
                     if (factionData) {
                       const md = factionData.models.find(m => m.name === newName);
                       if (md) {
@@ -628,7 +630,7 @@ export function Dashboard() {
                         }
                       }
                     }
-                    setRelapseFormData({...relapseFormData, modelName: newName, qty: newQty, pointsPerModel: newPoints, unitCost: newCost});
+                    setRelapseFormData({ ...relapseFormData, modelName: newName, qty: newQty, pointsPerModel: newPoints, unitCost: newCost });
                   }}
                   placeholder="e.g. Combat Patrol: Tyranids"
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -643,7 +645,7 @@ export function Dashboard() {
                 <input
                   type="text"
                   value={relapseFormData.nickname}
-                  onChange={e => setRelapseFormData({...relapseFormData, nickname: e.target.value})}
+                  onChange={e => setRelapseFormData({ ...relapseFormData, nickname: e.target.value })}
                   placeholder="e.g. Purple Sash, Squad Alpha..."
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
@@ -655,7 +657,7 @@ export function Dashboard() {
                   <input
                     type="number" min="1" required
                     value={relapseFormData.qty}
-                    onChange={e => setRelapseFormData({...relapseFormData, qty: parseInt(e.target.value) || 1})}
+                    onChange={e => setRelapseFormData({ ...relapseFormData, qty: parseInt(e.target.value) || 1 })}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
@@ -664,7 +666,7 @@ export function Dashboard() {
                   <input
                     type="number" min="0"
                     value={relapseFormData.pointsPerModel}
-                    onChange={e => setRelapseFormData({...relapseFormData, pointsPerModel: parseInt(e.target.value) || 0})}
+                    onChange={e => setRelapseFormData({ ...relapseFormData, pointsPerModel: parseInt(e.target.value) || 0 })}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
@@ -674,7 +676,7 @@ export function Dashboard() {
                     type="number" min="0" step="0.01"
                     placeholder="60.00"
                     value={relapseFormData.unitCost}
-                    onChange={e => setRelapseFormData({...relapseFormData, unitCost: e.target.value ? parseFloat(e.target.value) : ''})}
+                    onChange={e => setRelapseFormData({ ...relapseFormData, unitCost: e.target.value ? parseFloat(e.target.value) : '' })}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
                 </div>
@@ -685,7 +687,7 @@ export function Dashboard() {
                 <select
                   required
                   value={relapseFormData.reason}
-                  onChange={e => setRelapseFormData({...relapseFormData, reason: e.target.value})}
+                  onChange={e => setRelapseFormData({ ...relapseFormData, reason: e.target.value })}
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
                 >
                   <option value="">Select an excuse...</option>
@@ -701,16 +703,16 @@ export function Dashboard() {
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 mt-4 border-t border-zinc-800">
-                <button 
-                  type="button" 
-                  onClick={() => setIsRelapseModalOpen(false)} 
+                <button
+                  type="button"
+                  onClick={() => setIsRelapseModalOpen(false)}
                   className="px-4 py-2 border border-zinc-700 bg-zinc-800 rounded-lg text-white hover:bg-zinc-700 transition-colors text-sm"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
-                  disabled={savingRelapse} 
+                <button
+                  type="submit"
+                  disabled={savingRelapse}
                   className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white disabled:opacity-50 transition-colors font-medium text-sm"
                 >
                   {savingRelapse ? 'Confessing...' : 'Log Relapse'}
@@ -722,7 +724,7 @@ export function Dashboard() {
       )}
 
       {recoveryPlan && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full shadow-2xl text-white font-medium"
@@ -738,7 +740,7 @@ export function Dashboard() {
 
 function MetricCard({ title, value, subtitle, icon: Icon, color = "text-zinc-400", trend, onClick, actionIcon: ActionIcon }: any) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       onClick={onClick}
@@ -747,7 +749,7 @@ function MetricCard({ title, value, subtitle, icon: Icon, color = "text-zinc-400
       <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity duration-500 transform group-hover:scale-110 group-hover:rotate-12">
         <Icon className={`h-24 w-24 ${color}`} />
       </div>
-      
+
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">{title}</h3>

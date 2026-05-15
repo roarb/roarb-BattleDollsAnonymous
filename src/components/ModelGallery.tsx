@@ -20,6 +20,8 @@ interface ModelGalleryProps {
   onImagesUpdated: () => void;
 }
 
+import progressPhotosEmpty from '../assets/state/empty/progress_photos.png';
+
 export function ModelGallery({ model, isOpen, onClose, onImagesUpdated }: ModelGalleryProps) {
   const { user } = useAuth();
   const [uploading, setUploading] = useState<string | null>(null);
@@ -140,6 +142,21 @@ export function ModelGallery({ model, isOpen, onClose, onImagesUpdated }: ModelG
           </button>
         </div>
 
+        {/* Comparison Section (Moved up if no images exist) */}
+        {availableStatuses.length === 0 && (
+          <div className="p-6 border-b border-zinc-800 text-center">
+            <motion.img 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              src={progressPhotosEmpty} 
+              alt="No photos" 
+              className="mx-auto w-full max-w-md mb-6 rounded-xl shadow-2xl border border-zinc-800/50"
+            />
+            <h3 className="text-lg font-bold text-white mb-2">No progress photos yet</h3>
+            <p className="text-zinc-500 max-w-sm mx-auto">Document your hobby journey! Upload photos for each stage below to see your models come to life.</p>
+          </div>
+        )}
+
         {/* Upload Grid */}
         <div className="p-6 border-b border-zinc-800">
           <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider mb-4">Upload by Stage</h3>
@@ -197,74 +214,76 @@ export function ModelGallery({ model, isOpen, onClose, onImagesUpdated }: ModelG
         </div>
 
         {/* Comparison Slider */}
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Compare Progress</h3>
-            {availableStatuses.length >= 2 && (
-              <div className="flex items-center space-x-2 text-xs">
-                <select
-                  value={leftStatus}
-                  onChange={e => setLeftStatus(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+        {availableStatuses.length > 0 && (
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Compare Progress</h3>
+              {availableStatuses.length >= 2 && (
+                <div className="flex items-center space-x-2 text-xs">
+                  <select
+                    value={leftStatus}
+                    onChange={e => setLeftStatus(e.target.value)}
+                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    {availableStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <ChevronRight className="w-4 h-4 text-zinc-500" />
+                  <select
+                    value={rightStatus}
+                    onChange={e => setRightStatus(e.target.value)}
+                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    {availableStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {hasComparison ? (
+              <div
+                ref={sliderRef}
+                className="relative w-full aspect-video rounded-xl overflow-hidden cursor-col-resize select-none border border-zinc-800"
+                onMouseDown={() => setIsDragging(true)}
+                onTouchStart={() => setIsDragging(true)}
+              >
+                {/* Right image (full, underneath) */}
+                <img src={rightImage} alt={rightStatus} className="absolute inset-0 w-full h-full object-cover" />
+
+                {/* Left image (clipped) */}
+                <div className="absolute inset-0 overflow-hidden" style={{ width: `${sliderPos}%` }}>
+                  <img src={leftImage} alt={leftStatus} className="absolute inset-0 w-full h-full object-cover" style={{ minWidth: sliderRef.current ? `${sliderRef.current.offsetWidth}px` : '100%' }} />
+                </div>
+
+                {/* Slider handle */}
+                <div
+                  className="absolute top-0 bottom-0 w-1 bg-white/80 shadow-[0_0_10px_rgba(255,255,255,0.5)] cursor-col-resize z-10"
+                  style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
                 >
-                  {availableStatuses.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <ChevronRight className="w-4 h-4 text-zinc-500" />
-                <select
-                  value={rightStatus}
-                  onChange={e => setRightStatus(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  {availableStatuses.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
+                    <div className="flex items-center space-x-0.5">
+                      <ChevronLeft className="w-3 h-3 text-zinc-800" />
+                      <ChevronRight className="w-3 h-3 text-zinc-800" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Labels */}
+                <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/70 rounded-md text-xs text-white font-medium backdrop-blur-sm z-20">
+                  {leftStatus}
+                </div>
+                <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/70 rounded-md text-xs text-white font-medium backdrop-blur-sm z-20">
+                  {rightStatus}
+                </div>
+              </div>
+            ) : (
+              <div className="w-full aspect-video rounded-xl border-2 border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-600">
+                <ImageIcon className="w-10 h-10 mb-2" />
+                <p className="text-sm">Upload at least 2 stage photos to enable comparison</p>
+                <p className="text-xs text-zinc-700 mt-1">{availableStatuses.length} of 2 minimum uploaded</p>
               </div>
             )}
           </div>
-
-          {hasComparison ? (
-            <div
-              ref={sliderRef}
-              className="relative w-full aspect-video rounded-xl overflow-hidden cursor-col-resize select-none border border-zinc-800"
-              onMouseDown={() => setIsDragging(true)}
-              onTouchStart={() => setIsDragging(true)}
-            >
-              {/* Right image (full, underneath) */}
-              <img src={rightImage} alt={rightStatus} className="absolute inset-0 w-full h-full object-cover" />
-
-              {/* Left image (clipped) */}
-              <div className="absolute inset-0 overflow-hidden" style={{ width: `${sliderPos}%` }}>
-                <img src={leftImage} alt={leftStatus} className="absolute inset-0 w-full h-full object-cover" style={{ minWidth: sliderRef.current ? `${sliderRef.current.offsetWidth}px` : '100%' }} />
-              </div>
-
-              {/* Slider handle */}
-              <div
-                className="absolute top-0 bottom-0 w-1 bg-white/80 shadow-[0_0_10px_rgba(255,255,255,0.5)] cursor-col-resize z-10"
-                style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
-              >
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <div className="flex items-center space-x-0.5">
-                    <ChevronLeft className="w-3 h-3 text-zinc-800" />
-                    <ChevronRight className="w-3 h-3 text-zinc-800" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Labels */}
-              <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/70 rounded-md text-xs text-white font-medium backdrop-blur-sm z-20">
-                {leftStatus}
-              </div>
-              <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/70 rounded-md text-xs text-white font-medium backdrop-blur-sm z-20">
-                {rightStatus}
-              </div>
-            </div>
-          ) : (
-            <div className="w-full aspect-video rounded-xl border-2 border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-600">
-              <ImageIcon className="w-10 h-10 mb-2" />
-              <p className="text-sm">Upload at least 2 stage photos to enable comparison</p>
-              <p className="text-xs text-zinc-700 mt-1">{availableStatuses.length} of 2 minimum uploaded</p>
-            </div>
-          )}
-        </div>
+        )}
       </motion.div>
     </div>
   );
