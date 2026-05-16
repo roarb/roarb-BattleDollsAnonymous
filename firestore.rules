@@ -86,9 +86,47 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-          (request.auth.token.email == "rhoehn24@gmail.com" && request.auth.token.email_verified == true));
+      return isAuthenticated() && (
+        (request.auth.token.email == "rhoehn24@gmail.com" && request.auth.token.email_verified == true) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function hasFriendRelationship(userId) {
+      return isAuthenticated() && (
+        exists(/databases/$(database)/documents/relationships/$(request.auth.uid + '_' + userId + '_friend')) ||
+        exists(/databases/$(database)/documents/relationships/$(userId + '_' + request.auth.uid + '_friend'))
+      );
+    }
+
+    function hasSponsorshipRelationship(userId) {
+      return isAuthenticated() && (
+        exists(/databases/$(database)/documents/relationships/$(request.auth.uid + '_' + userId + '_sponsorship')) ||
+        exists(/databases/$(database)/documents/relationships/$(userId + '_' + request.auth.uid + '_sponsorship'))
+      );
+    }
+
+    function isConnected(userId) {
+      return isAuthenticated() && request.auth.uid != userId &&
+        (hasFriendRelationship(userId) || hasSponsorshipRelationship(userId));
+    }
+
+    function hasPendingRequest(userId) {
+      return isAuthenticated() && (
+        exists(/databases/$(database)/documents/connectionRequests/$(userId + '_' + request.auth.uid + '_friend')) ||
+        exists(/databases/$(database)/documents/connectionRequests/$(userId + '_' + request.auth.uid + '_sponsor')) ||
+        exists(/databases/$(database)/documents/connectionRequests/$(request.auth.uid + '_' + userId + '_friend')) ||
+        exists(/databases/$(database)/documents/connectionRequests/$(request.auth.uid + '_' + userId + '_sponsor'))
+      );
+    }
+
+    function canViewProfile(userId) {
+      return isOwner(userId) || 
+             isAdmin() || 
+             (resource != null && 'isPublic' in resource.data && resource.data.isPublic == true) || 
+             isConnected(userId) ||
+             hasPendingRequest(userId);
     }
 
     // ===============================================================
@@ -96,10 +134,10 @@ service cloud.firestore {
     // ===============================================================
 
     function isValidUser(data) {
-      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'createdAt', 'targetFaction', 'targetArmyId', 'unlockedAchievements', 'currentStreak', 'bestStreak', 'lastStreakDate']) &&
-             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+      return (!('uid' in data) || (data.uid is string && data.uid.size() > 0 && data.uid.size() < 100)) &&
              (!('email' in data) || data.email == null || (data.email is string && isValidEmail(data.email) && data.email.size() < 150)) &&
              (!('displayName' in data) || data.displayName == null || (data.displayName is string && data.displayName.size() < 100)) &&
+             (!('photoURL' in data) || data.photoURL == null || data.photoURL is string) &&
              (!('targetFaction' in data) || data.targetFaction == null || (data.targetFaction is string && data.targetFaction.size() < 100)) &&
              (!('targetArmyId' in data) || data.targetArmyId == null || (data.targetArmyId is string && data.targetArmyId.size() < 100)) &&
              (!('unlockedAchievements' in data) || data.unlockedAchievements == null || data.unlockedAchievements is list) &&
@@ -107,69 +145,169 @@ service cloud.firestore {
              (!('bestStreak' in data) || data.bestStreak == null || data.bestStreak is number) &&
              (!('lastStreakDate' in data) || data.lastStreakDate == null || data.lastStreakDate is string) &&
              (!('role' in data) || data.role in ['admin', 'user']) &&
-             (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp);
-    }
-
-    function isValidMiniatureModel(data) {
-      return hasOnlyAllowedFields(['uid', 'modelName', 'nickname', 'qty', 'status', 'pointsPerModel', 'unitCost', 'faction', 'gameSystem', 'createdAt', 'updatedAt']) &&
-             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
-             data.modelName is string && data.modelName.size() > 0 && data.modelName.size() < 100 &&
-             (!('nickname' in data) || data.nickname == null || data.nickname == '' || (data.nickname is string && data.nickname.size() < 100)) &&
-             data.qty is number && data.qty >= 0 && data.qty <= 10000 &&
-             data.status in ['Unbuilt', 'Assembled', 'Primed', 'Painted', 'Tabletop Ready'] &&
-             (!('pointsPerModel' in data) || data.pointsPerModel == null || data.pointsPerModel == '' || (data.pointsPerModel is number && data.pointsPerModel >= 0 && data.pointsPerModel <= 10000)) &&
-             (!('unitCost' in data) || data.unitCost == null || data.unitCost == '' || (data.unitCost is number && data.unitCost >= 0 && data.unitCost <= 100000)) &&
-             data.faction is string && data.faction.size() > 0 && data.faction.size() < 100 &&
-             (!('gameSystem' in data) || data.gameSystem == null || data.gameSystem == '' || (data.gameSystem is string && data.gameSystem.size() > 0 && data.gameSystem.size() < 100)) &&
              (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp) &&
              (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp);
     }
 
+    function isValidMiniatureModel(data) {
+      return (!('uid' in data) || (data.uid is string && data.uid.size() > 0 && data.uid.size() < 100)) &&
+             (!('modelName' in data) || (data.modelName is string && data.modelName.size() > 0 && data.modelName.size() < 100)) &&
+             (!('nickname' in data) || data.nickname == null || data.nickname == '' || (data.nickname is string && data.nickname.size() < 100)) &&
+             (!('qty' in data) || (data.qty is number && data.qty >= 0 && data.qty <= 10000)) &&
+             (!('status' in data) || data.status in ['Unbuilt', 'Assembled', 'Primed', 'Basic Paint', 'Completed']) &&
+             (!('pointsPerModel' in data) || data.pointsPerModel == null || data.pointsPerModel == '' || (data.pointsPerModel is number && data.pointsPerModel >= 0 && data.pointsPerModel <= 10000)) &&
+             (!('unitCost' in data) || data.unitCost == null || data.unitCost == '' || (data.unitCost is number && data.unitCost >= 0 && data.unitCost <= 100000)) &&
+             (!('faction' in data) || (data.faction is string && data.faction.size() > 0 && data.faction.size() < 100)) &&
+             (!('gameSystem' in data) || data.gameSystem == null || data.gameSystem == '' || (data.gameSystem is string && data.gameSystem.size() > 0 && data.gameSystem.size() < 100)) &&
+             (!('images' in data) || data.images == null || data.images is map) &&
+             (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp);
+    }
+
+    function isValidProgressSummary(data) {
+      return data is map &&
+             (!('unbuilt' in data) || data.unbuilt is number) &&
+             (!('assembled' in data) || data.assembled is number) &&
+             (!('primed' in data) || data.primed is number) &&
+             (!('basicPaint' in data) || data.basicPaint is number) &&
+             (!('completed' in data) || data.completed is number) &&
+             (!('total' in data) || data.total is number);
+    }
+
+    function isValidCommunityProfile(data) {
+      return (!('uid' in data) || (data.uid is string && data.uid.size() > 0 && data.uid.size() < 100)) &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() > 0 && data.displayName.size() < 100)) &&
+             (!('displayNameLower' in data) || (data.displayNameLower is string && data.displayNameLower.size() > 0 && data.displayNameLower.size() < 100)) &&
+             (!('photoURL' in data) || data.photoURL == null || data.photoURL is string) &&
+             (!('isPublic' in data) || data.isPublic is bool) &&
+             (!('allowFriendRequests' in data) || data.allowFriendRequests is bool) &&
+             (!('allowSponsorRequests' in data) || data.allowSponsorRequests is bool) &&
+             (!('shareRelapses' in data) || data.shareRelapses is bool) &&
+             (!('shareProgress' in data) || data.shareProgress is bool) &&
+             (!('currentStreak' in data) || data.currentStreak is number) &&
+             (!('badgeCount' in data) || data.badgeCount is number) &&
+             (!('progressSummary' in data) || isValidProgressSummary(data.progressSummary)) &&
+             (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp);
+    }
+
+    function isValidConnectionRequest(data) {
+      return (!('fromUid' in data) || (data.fromUid is string && data.fromUid.size() > 0 && data.fromUid.size() < 100)) &&
+             (!('toUid' in data) || (data.toUid is string && data.toUid.size() > 0 && data.toUid.size() < 100)) &&
+             (!('fromUid' in data) || !('toUid' in data) || data.fromUid != data.toUid) &&
+             (!('kind' in data) || data.kind in ['friend', 'sponsor']) &&
+             (!('status' in data) || data.status in ['pending', 'accepted', 'declined']) &&
+             (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp);
+    }
+
+    function isValidRelationship(data) {
+      return (!('requestId' in data) || (data.requestId is string && data.requestId.size() > 0 && data.requestId.size() < 250)) &&
+             (!('kind' in data) || data.kind in ['friend', 'sponsorship']) &&
+             (!('status' in data) || data.status == 'active') &&
+             (!('memberUids' in data) || (data.memberUids is list && data.memberUids.size() == 2)) &&
+             (!('requesterUid' in data) || data.requesterUid is string) &&
+             (!('recipientUid' in data) || data.recipientUid is string) &&
+             (!('memberUids' in data) || !('requesterUid' in data) || !('recipientUid' in data) || data.memberUids.hasAll([data.requesterUid, data.recipientUid])) &&
+             (!('kind' in data) || data.kind == 'friend' ||
+              (data.kind == 'sponsorship' &&
+               (!('sponsorUid' in data) || data.sponsorUid is string) &&
+               (!('sponseeUid' in data) || data.sponseeUid is string) &&
+               (!('memberUids' in data) || !('sponsorUid' in data) || !('sponseeUid' in data) || data.memberUids.hasAll([data.sponsorUid, data.sponseeUid])))) &&
+             (!('createdAt' in data) || data.createdAt == null || data.createdAt is timestamp);
+    }
+
+    function relationshipMatchesAcceptedRequest(data) {
+      let requestPath = /databases/$(database)/documents/connectionRequests/$(data.requestId);
+      let requestData = getAfter(requestPath).data;
+      return existsAfter(requestPath) &&
+             requestData.status == 'accepted' &&
+             requestData.fromUid == data.requesterUid &&
+             requestData.toUid == data.recipientUid &&
+             request.auth.uid == requestData.toUid &&
+             data.memberUids.hasAll([requestData.fromUid, requestData.toUid]) &&
+             ((requestData.kind == 'friend' && data.kind == 'friend') ||
+              (requestData.kind == 'sponsor' &&
+               data.kind == 'sponsorship' &&
+               data.sponseeUid == requestData.fromUid &&
+               data.sponsorUid == requestData.toUid));
+    }
+
+    function isValidActivityDetails(data) {
+      return data is map &&
+             (!('modelName' in data) || data.modelName == null || data.modelName is string) &&
+             (!('stageFrom' in data) || data.stageFrom == null || data.stageFrom in ['Unbuilt', 'Assembled', 'Primed', 'Basic Paint', 'Completed']) &&
+             (!('stageTo' in data) || data.stageTo == null || data.stageTo in ['Unbuilt', 'Assembled', 'Primed', 'Basic Paint', 'Completed']) &&
+             (!('thumbnailUrl' in data) || data.thumbnailUrl == null || data.thumbnailUrl is string) &&
+             (!('achievementTitle' in data) || data.achievementTitle == null || data.achievementTitle is string) &&
+             (!('achievementDescription' in data) || data.achievementDescription == null || data.achievementDescription is string) &&
+             (!('reason' in data) || data.reason == null || data.reason is string) &&
+             (!('qty' in data) || data.qty == null || data.qty is number) &&
+             (!('faction' in data) || data.faction == null || data.faction is string) &&
+             (!('gameSystem' in data) || data.gameSystem == null || data.gameSystem is string);
+    }
+
+    function profileAllowsActivity(data) {
+      let profile = get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
+      return ((data.type == 'relapse' && profile.shareRelapses == true) ||
+              ((data.type == 'progress' || data.type == 'milestone') && profile.shareProgress == true)) &&
+             ((data.visibility == 'public' && profile.isPublic == true) ||
+              data.visibility == 'connections');
+    }
+
+    function isValidActivity(data) {
+      return (!('userId' in data) || (data.userId is string && data.userId.size() > 0 && data.userId.size() < 100)) &&
+             (!('userDisplayName' in data) || (data.userDisplayName is string && data.userDisplayName.size() > 0 && data.userDisplayName.size() < 100)) &&
+             (!('userPhotoURL' in data) || data.userPhotoURL == null || data.userPhotoURL is string) &&
+             (!('type' in data) || data.type in ['relapse', 'progress', 'milestone']) &&
+             (!('visibility' in data) || data.visibility in ['public', 'connections']) &&
+             (!('createdAt' in data) || data.createdAt is timestamp) &&
+             (!('details' in data) || isValidActivityDetails(data.details)) &&
+             (!('likes' in data) || data.likes is list) &&
+             (!('commentCount' in data) || data.commentCount is number);
+    }
+
     function isValidHobbyProject(data) {
-      return hasOnlyAllowedFields(['uid', 'title', 'deadline', 'targetPoints', 'createdAt', 'updatedAt']) &&
-             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
-             data.title is string && data.title.size() > 0 && data.title.size() < 150 &&
+      return (!('uid' in data) || (data.uid is string && data.uid.size() > 0 && data.uid.size() < 100)) &&
+             (!('title' in data) || (data.title is string && data.title.size() > 0 && data.title.size() < 150)) &&
              (!('deadline' in data) || data.deadline is timestamp) &&
              (!('targetPoints' in data) || (data.targetPoints is number && data.targetPoints >= 0 && data.targetPoints <= 100000)) &&
-             data.createdAt is timestamp &&
-             data.updatedAt is timestamp;
+             (!('createdAt' in data) || data.createdAt is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp);
     }
 
     function isValidArmyList(data) {
-      return hasOnlyAllowedFields(['uid', 'title', 'pointsLimit', 'faction', 'content', 'notes', 'createdAt', 'updatedAt']) &&
-             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
-             data.title is string && data.title.size() > 0 && data.title.size() < 150 &&
-             data.pointsLimit is number && data.pointsLimit >= 0 && data.pointsLimit <= 100000 &&
-             data.faction is string && data.faction.size() > 0 && data.faction.size() < 100 &&
-             data.content is string && data.content.size() < 100000 && // Allowing up to ~100KB for content
+      return (!('uid' in data) || (data.uid is string && data.uid.size() > 0 && data.uid.size() < 100)) &&
+             (!('title' in data) || (data.title is string && data.title.size() > 0 && data.title.size() < 150)) &&
+             (!('pointsLimit' in data) || (data.pointsLimit is number && data.pointsLimit >= 0 && data.pointsLimit <= 100000)) &&
+             (!('faction' in data) || (data.faction is string && data.faction.size() > 0 && data.faction.size() < 100)) &&
+             (!('content' in data) || (data.content is string && data.content.size() < 100000)) &&
              (!('notes' in data) || (data.notes is string && data.notes.size() < 10000)) &&
-             data.createdAt is timestamp &&
-             data.updatedAt is timestamp;
+             (!('createdAt' in data) || data.createdAt is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp);
     }
 
     function isValidGameRecord(data) {
-      return hasOnlyAllowedFields(['uid', 'armyListId', 'outcome', 'pointsFor', 'pointsAgainst', 'opponentName', 'opponentFaction', 'mission', 'notes', 'createdAt', 'updatedAt']) &&
-             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+      return (!('uid' in data) || (data.uid is string && data.uid.size() > 0 && data.uid.size() < 100)) &&
              (!('armyListId' in data) || (data.armyListId is string && data.armyListId.size() < 100)) &&
-             data.outcome in ['Win', 'Loss', 'Draw'] &&
+             (!('outcome' in data) || data.outcome in ['Win', 'Loss', 'Draw']) &&
              (!('pointsFor' in data) || (data.pointsFor is number && data.pointsFor >= 0 && data.pointsFor <= 100000)) &&
              (!('pointsAgainst' in data) || (data.pointsAgainst is number && data.pointsAgainst >= 0 && data.pointsAgainst <= 100000)) &&
              (!('opponentName' in data) || (data.opponentName is string && data.opponentName.size() < 100)) &&
              (!('opponentFaction' in data) || (data.opponentFaction is string && data.opponentFaction.size() < 100)) &&
              (!('mission' in data) || (data.mission is string && data.mission.size() < 150)) &&
              (!('notes' in data) || (data.notes is string && data.notes.size() < 10000)) &&
-             data.createdAt is timestamp &&
-             data.updatedAt is timestamp;
+             (!('createdAt' in data) || data.createdAt is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp);
     }
 
     function isValidRelapseRecord(data) {
-      return hasOnlyAllowedFields(['uid', 'msrp', 'boxName', 'reason', 'createdAt', 'updatedAt']) &&
-             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
-             data.msrp is number && data.msrp >= 0 && data.msrp <= 100000 &&
-             data.boxName is string && data.boxName.size() > 0 && data.boxName.size() < 150 &&
-             data.reason is string && data.reason.size() > 0 && data.reason.size() < 300 &&
-             data.createdAt is timestamp &&
-             data.updatedAt is timestamp;
+      return (!('uid' in data) || (data.uid is string && data.uid.size() > 0 && data.uid.size() < 100)) &&
+             (!('msrp' in data) || (data.msrp is number && data.msrp >= 0 && data.msrp <= 100000)) &&
+             (!('boxName' in data) || (data.boxName is string && data.boxName.size() > 0 && data.boxName.size() < 150)) &&
+             (!('reason' in data) || (data.reason is string && data.reason.size() > 0 && data.reason.size() < 300)) &&
+             (!('createdAt' in data) || data.createdAt is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp);
     }
 
     // ===============================================================
@@ -177,23 +315,89 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if isAuthenticated() && (resource == null || isOwner(userId) || isAdmin());
       allow create: if isAuthenticated() && isOwner(userId) && uidUnchanged();
-      allow update: if isAuthenticated() && isOwner(userId) && uidNotModified();
+      allow update: if isAuthenticated() && isOwner(userId) && uidNotModified() && isValidUser(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /profiles/{userId} {
+      allow read: if isAuthenticated() && (resource == null || canViewProfile(userId));
+      allow create: if isAuthenticated() &&
+                    isOwner(userId) &&
+                    request.resource.data.uid == request.auth.uid &&
+                    isValidCommunityProfile(request.resource.data);
+      allow update: if isAuthenticated() &&
+                    isOwner(userId) &&
+                    request.resource.data.uid == resource.data.uid &&
+                    isValidCommunityProfile(request.resource.data);
       allow delete: if isAdmin();
     }
 
     match /collection/{modelId} {
-      allow read: if isDocOwner() || isAdmin();
+      allow read: if isAuthenticated() && (resource == null || isDocOwner() || isAdmin());
       allow create: if isAuthenticated() &&
                     isValidMiniatureModel(request.resource.data) &&
                     uidUnchanged();
-      allow update: if isDocOwner();
+      allow update: if isDocOwner() &&
+                    isValidMiniatureModel(request.resource.data) &&
+                    uidNotModified();
       allow delete: if isDocOwner() || isAdmin();
     }
 
+    match /connectionRequests/{requestId} {
+      allow read: if isAuthenticated() && (resource == null ||
+                  resource.data.fromUid == request.auth.uid ||
+                  resource.data.toUid == request.auth.uid ||
+                  isAdmin());
+      allow create: if isAuthenticated() &&
+                    isValidConnectionRequest(request.resource.data) &&
+                    request.resource.data.fromUid == request.auth.uid &&
+                    request.resource.data.status == 'pending';
+      allow update: if isAuthenticated() &&
+                    isValidConnectionRequest(request.resource.data) &&
+                    resource.data.toUid == request.auth.uid &&
+                    request.resource.data.fromUid == resource.data.fromUid &&
+                    request.resource.data.toUid == resource.data.toUid &&
+                    request.resource.data.kind == resource.data.kind &&
+                    request.resource.data.createdAt == resource.data.createdAt &&
+                    request.resource.data.status in ['accepted', 'declined'] &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if isAuthenticated() &&
+                    (resource.data.fromUid == request.auth.uid ||
+                     resource.data.toUid == request.auth.uid ||
+                     isAdmin());
+    }
+
+    match /relationships/{relationshipId} {
+      allow read: if isAuthenticated() && (resource == null ||
+                  (request.auth.uid in resource.data.memberUids) || isAdmin());
+      allow create: if isAuthenticated() &&
+                    isValidRelationship(request.resource.data) &&
+                    relationshipMatchesAcceptedRequest(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /activities/{activityId} {
+      allow read: if isAuthenticated() && (resource == null ||
+                  resource.data.userId == request.auth.uid ||
+                  (exists(/databases/$(database)/documents/profiles/$(resource.data.userId)) && 
+                   get(/databases/$(database)/documents/profiles/$(resource.data.userId)).data.isPublic == true) ||
+                  isConnected(resource.data.userId) ||
+                  isAdmin());
+      allow create: if isAuthenticated() &&
+                    request.resource.data.userId == request.auth.uid &&
+                    isValidActivity(request.resource.data) &&
+                    profileAllowsActivity(request.resource.data);
+      allow update: if isAuthenticated() &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) &&
+                    request.resource.data.likes is list;
+      allow delete: if isAuthenticated() &&
+                    (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
     match /projects/{projectId} {
-      allow read: if isDocOwner() || isAdmin();
+      allow read: if isAuthenticated() && (resource == null || isDocOwner() || isAdmin());
       allow create: if isAuthenticated() &&
                     isValidHobbyProject(request.resource.data) &&
                     uidUnchanged();
@@ -205,7 +409,7 @@ service cloud.firestore {
     }
 
     match /armyLists/{listId} {
-      allow read: if isDocOwner() || isAdmin();
+      allow read: if isAuthenticated() && (resource == null || isDocOwner() || isAdmin());
       allow create: if isAuthenticated() &&
                     isValidArmyList(request.resource.data) &&
                     uidUnchanged();
@@ -217,7 +421,7 @@ service cloud.firestore {
     }
 
     match /gameLogs/{logId} {
-      allow read: if isDocOwner() || isAdmin();
+      allow read: if isAuthenticated() && (resource == null || isDocOwner() || isAdmin());
       allow create: if isAuthenticated() &&
                     isValidGameRecord(request.resource.data) &&
                     uidUnchanged();
@@ -229,7 +433,7 @@ service cloud.firestore {
     }
 
     match /relapses/{relapseId} {
-      allow read: if isDocOwner() || isAdmin();
+      allow read: if isAuthenticated() && (resource == null || isDocOwner() || isAdmin());
       allow create: if isAuthenticated() &&
                     isValidRelapseRecord(request.resource.data) &&
                     uidUnchanged();

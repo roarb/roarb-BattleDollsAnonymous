@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { User, Mail, Calendar, Camera, Save, Loader2, UserCircle, LogOut } from 'lucide-react';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { User, Mail, Calendar, Camera, Save, Loader2, LogOut, Eye, Users, Handshake, Flame, TrendingUp } from 'lucide-react';
 import { motion } from 'motion/react';
+import { normalizeSearchText } from '../lib/community';
 
 import memberProfileHeader from '../assets/graphics/header/member_profile.png';
 
@@ -12,6 +13,11 @@ export function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
+  const [allowFriendRequests, setAllowFriendRequests] = useState(true);
+  const [allowSponsorRequests, setAllowSponsorRequests] = useState(true);
+  const [shareRelapses, setShareRelapses] = useState(false);
+  const [shareProgress, setShareProgress] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
   const [createdAt, setCreatedAt] = useState<string | null>(null);
 
@@ -20,22 +26,43 @@ export function Settings() {
     
     const fetchUserData = async () => {
       try {
+        setDisplayName(user.displayName || '');
+
         const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
-        
-        if (userSnap.exists()) {
-          const data = userSnap.data();
-          setDisplayName(data.displayName || user.displayName || '');
-          if (data.createdAt) {
-            setCreatedAt(data.createdAt.toDate().toLocaleDateString(undefined, { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            }));
+        try {
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            const data = userSnap.data();
+            setDisplayName(data.displayName || user.displayName || '');
+            if (data.createdAt) {
+              setCreatedAt(data.createdAt.toDate().toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }));
+            }
           }
+        } catch (err) {
+          console.warn('Could not load private user profile:', err);
+        }
+
+        try {
+          const profileSnap = await getDoc(doc(db, 'profiles', user.uid));
+          if (profileSnap.exists()) {
+            const profile = profileSnap.data();
+            setDisplayName(profile.displayName || user.displayName || '');
+            setIsPublic(Boolean(profile.isPublic));
+            setAllowFriendRequests(profile.allowFriendRequests !== false);
+            setAllowSponsorRequests(profile.allowSponsorRequests !== false);
+            setShareRelapses(Boolean(profile.shareRelapses));
+            setShareProgress(profile.shareProgress !== false);
+          }
+        } catch (err) {
+          handleFirestoreError(err, OperationType.GET, `profiles/${user.uid}`);
         }
       } catch (err) {
-        handleFirestoreError(err, OperationType.GET, `users/${user.uid}`);
+        console.error('Error loading settings:', err);
       } finally {
         setLoading(false);
       }
@@ -55,6 +82,18 @@ export function Settings() {
         displayName: displayName,
         updatedAt: serverTimestamp()
       });
+      await setDoc(doc(db, 'profiles', user.uid), {
+        uid: user.uid,
+        displayName,
+        displayNameLower: normalizeSearchText(displayName),
+        photoURL: user.photoURL || null,
+        isPublic,
+        allowFriendRequests,
+        allowSponsorRequests,
+        shareRelapses,
+        shareProgress,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
       setSuccessMessage('Profile updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
@@ -162,6 +201,46 @@ export function Settings() {
                 </div>
               </div>
 
+              <div className="space-y-4 pt-6 border-t border-zinc-800/50">
+                <h3 className="text-lg font-bold text-white flex items-center">
+                  <Users className="mr-2 h-5 w-5 text-emerald-400" />
+                  Community Sharing
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <ToggleRow
+                    icon={Eye}
+                    label="Public Profile"
+                    enabled={isPublic}
+                    onChange={setIsPublic}
+                  />
+                  <ToggleRow
+                    icon={Users}
+                    label="Friend Requests"
+                    enabled={allowFriendRequests}
+                    onChange={setAllowFriendRequests}
+                  />
+                  <ToggleRow
+                    icon={Handshake}
+                    label="Sponsor Requests"
+                    enabled={allowSponsorRequests}
+                    onChange={setAllowSponsorRequests}
+                  />
+                  <ToggleRow
+                    icon={Flame}
+                    label="Share Relapses"
+                    enabled={shareRelapses}
+                    onChange={setShareRelapses}
+                  />
+                  <ToggleRow
+                    icon={TrendingUp}
+                    label="Share Progress"
+                    enabled={shareProgress}
+                    onChange={setShareProgress}
+                  />
+                </div>
+              </div>
+
               <div className="pt-6 border-t border-zinc-800/50 flex items-center justify-between">
                 <div className="text-emerald-400 text-sm font-medium h-5">
                   {successMessage}
@@ -188,5 +267,32 @@ export function Settings() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+function ToggleRow({ icon: Icon, label, enabled, onChange }: {
+  icon: React.ElementType;
+  label: string;
+  enabled: boolean;
+  onChange: (enabled: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!enabled)}
+      className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all ${
+        enabled
+          ? 'border-blue-500/30 bg-blue-500/10 text-white'
+          : 'border-zinc-800 bg-zinc-950/70 text-zinc-400 hover:border-zinc-700'
+      }`}
+    >
+      <span className="flex items-center text-sm font-medium">
+        <Icon className={`mr-3 h-4 w-4 ${enabled ? 'text-blue-400' : 'text-zinc-500'}`} />
+        {label}
+      </span>
+      <span className={`relative h-5 w-9 rounded-full transition-colors ${enabled ? 'bg-blue-500' : 'bg-zinc-800'}`}>
+        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${enabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
+      </span>
+    </button>
   );
 }

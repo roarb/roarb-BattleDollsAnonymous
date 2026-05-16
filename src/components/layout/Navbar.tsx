@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogOut, LayoutDashboard, Package, Shield, Swords, Settings, History, Trophy } from 'lucide-react';
+import { LogOut, LayoutDashboard, Package, Shield, Swords, Settings, History, Trophy, Users } from 'lucide-react';
 import navLogo from '../../assets/WarDollies_Nav_Logo.png';
 
 export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNavigate: (path: string) => void }) {
@@ -12,6 +12,7 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
     { name: 'Army Manager', path: 'army-manager', icon: Shield },
     { name: 'Battle Logs', path: 'matches', icon: History },
     { name: 'Goals & Chips', path: 'goals', icon: Trophy },
+    { name: 'Community', path: 'community', icon: Users },
   ];
 
   return (
@@ -31,7 +32,7 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
           <div className="flex flex-1 justify-center md:justify-start md:ml-8 space-x-2 sm:space-x-6">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = currentPath === item.path;
+              const isActive = currentPath === item.path || (item.path === 'community' && currentPath.startsWith('profile/'));
               return (
                 <button
                   key={item.path}
@@ -55,7 +56,8 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
               <div className="flex items-center space-x-3 sm:space-x-4">
                 <button 
                   onClick={() => onNavigate('settings')}
-                  className={`flex items-center space-x-3 p-1 pr-2 rounded-full transition-colors cursor-pointer ${currentPath === 'settings' ? 'bg-zinc-800 border border-zinc-700' : 'hover:bg-zinc-800'}`}
+                  className={`flex items-center p-1 rounded-full transition-colors cursor-pointer ${currentPath === 'settings' ? 'bg-zinc-800 border border-zinc-700' : 'hover:bg-zinc-800'}`}
+                  title="Member Profile"
                 >
                   {user.photoURL && (
                     <img 
@@ -65,9 +67,6 @@ export function Navbar({ currentPath, onNavigate }: { currentPath: string, onNav
                       referrerPolicy="no-referrer"
                     />
                   )}
-                  <span className="hidden sm:block text-sm text-zinc-300 font-medium tracking-wide">
-                    {user.displayName}
-                  </span>
                 </button>
                 <div className="w-px h-5 bg-zinc-800 hidden sm:block"></div>
                 <button

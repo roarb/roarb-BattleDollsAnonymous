@@ -5,8 +5,9 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { doc, updateDoc } from 'firebase/firestore';
 import { storage, db, handleFirestoreError, OperationType } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { HOBBY_STATUSES } from '../lib/hobbyStatus';
 
-const STATUS_ORDER = ['Assembled', 'Primed', 'Basic Paint', 'Completed'];
+const STATUS_ORDER = HOBBY_STATUSES.filter(status => status !== 'Unbuilt');
 
 interface ModelGalleryProps {
   model: {
@@ -26,7 +27,7 @@ export function ModelGallery({ model, isOpen, onClose, onImagesUpdated }: ModelG
   const { user } = useAuth();
   const [uploading, setUploading] = useState<string | null>(null);
   const [leftStatus, setLeftStatus] = useState('Assembled');
-  const [rightStatus, setRightStatus] = useState('Painted');
+  const [rightStatus, setRightStatus] = useState('Completed');
   const [sliderPos, setSliderPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { Plus, Edit2, Trash2, Search, Filter, Database, ChevronUp, ChevronDown, ChevronsUpDown, Flame, Camera, ExternalLink, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { HobbyPhaseGuide } from '../components/HobbyPhaseGuide';
@@ -11,6 +11,8 @@ import { OLD_WORLD_DATA } from '../data/oldWorld';
 import { HORUS_HERESY_DATA } from '../data/horusHeresy';
 import { MARVEL_CP_DATA } from '../data/marvelCP';
 import { ModelGallery } from '../components/ModelGallery';
+import { createCommunityActivity } from '../lib/community';
+import { getBestProgressImage, HOBBY_STATUSES, isForwardProgress } from '../lib/hobbyStatus';
 
 interface Model {
   id: string;
@@ -25,7 +27,7 @@ interface Model {
   images?: Record<string, string>;
 }
 
-const STATUS_OPTIONS = ['Unbuilt', 'Assembled', 'Primed', 'Basic Paint', 'Completed'];
+const STATUS_OPTIONS = HOBBY_STATUSES;
 
 import pileOfShameEmpty from '../assets/state/empty/pile_of_shame.png';
 import stashHeader from '../assets/graphics/header/the_stash.png';
@@ -78,8 +80,7 @@ export function Collection() {
     if (!user) return;
 
     try {
-      let isForwardProgress = false;
-      const statusOrder = ['Unbuilt', 'Assembled', 'Primed', 'Basic Paint', 'Completed'];
+      let didMoveForward = false;
 
       if (editingModel) {
         await updateDoc(doc(db, 'collection', editingModel.id), {
@@ -87,9 +88,19 @@ export function Collection() {
           updatedAt: serverTimestamp()
         });
 
-        const oldIdx = statusOrder.indexOf(editingModel.status);
-        const newIdx = statusOrder.indexOf(formData.status);
-        if (newIdx > oldIdx) isForwardProgress = true;
+        didMoveForward = isForwardProgress(editingModel.status, formData.status);
+
+        if (didMoveForward) {
+          await createCommunityActivity(user, 'progress', {
+            modelName: formData.modelName,
+            stageFrom: editingModel.status,
+            stageTo: formData.status,
+            thumbnailUrl: getBestProgressImage(editingModel.images),
+            qty: formData.qty,
+            faction: formData.faction,
+            gameSystem: formData.gameSystem,
+          });
+        }
       } else {
         await addDoc(collection(db, 'collection'), {
           ...formData,
@@ -97,10 +108,10 @@ export function Collection() {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
-        isForwardProgress = true; // Logging new plastic counts as hobby activity
+        didMoveForward = formData.status !== 'Unbuilt';
       }
 
-      if (isForwardProgress) {
+      if (didMoveForward) {
         const userRef = doc(db, 'users', user.uid);
         const userSnap = await getDoc(userRef);
 

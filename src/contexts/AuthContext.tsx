@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider, handleFirestoreError, OperationType } from '../firebase';
+import { ensureCommunityProfile } from '../lib/community';
 
 interface AuthContextType {
   user: User | null;
@@ -22,17 +23,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Ensure user exists in Firestore
         try {
           const userRef = doc(db, 'users', currentUser.uid);
-          const userSnap = await getDoc(userRef);
+          let displayName = currentUser.displayName;
+          let userSnap = null;
+
+          try {
+            userSnap = await getDoc(userRef);
+          } catch (error) {
+            console.warn('Could not read private user profile during bootstrap:', error);
+          }
           
-          if (!userSnap.exists()) {
+          if (!userSnap?.exists()) {
             await setDoc(userRef, {
               uid: currentUser.uid,
               email: currentUser.email,
               displayName: currentUser.displayName,
               role: 'user',
               createdAt: serverTimestamp()
-            });
+            }, { merge: true });
+          } else {
+            displayName = userSnap.data().displayName || displayName;
           }
+          await ensureCommunityProfile(currentUser, displayName);
         } catch (error) {
           console.error("Error creating user profile:", error);
           // Don't throw here, just log, so the user can still be logged in locally

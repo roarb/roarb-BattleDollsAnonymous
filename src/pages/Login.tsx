@@ -3,9 +3,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { LogIn, LayoutDashboard, Package, Camera, Trophy, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import logo from '../assets/WarDollies_Logo.png';
+import p1 from '../assets/graphics/sample_profile/01.png';
+import p2 from '../assets/graphics/sample_profile/02.png';
+import p3 from '../assets/graphics/sample_profile/03.png';
+import p4 from '../assets/graphics/sample_profile/04.png';
+import p5 from '../assets/graphics/sample_profile/05.png';
+import p6 from '../assets/graphics/sample_profile/06.png';
 
 export function Login() {
   const { login } = useAuth();
+  const sampleProfiles = [p1, p2, p3, p4, p5, p6];
 
   const features = [
     {
@@ -63,14 +70,17 @@ export function Login() {
             </p>
             
             <div className="mt-10 hidden lg:flex items-center space-x-4 text-zinc-500 text-sm">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className={`h-8 w-8 rounded-full border-2 border-zinc-950 bg-zinc-800 flex items-center justify-center`}>
-                    <div className="h-4 w-4 rounded-full bg-blue-500/50" />
+              <div className="flex -space-x-3">
+                {sampleProfiles.slice(0, 5).map((img, i) => (
+                  <div key={i} className="h-9 w-9 rounded-full border-2 border-zinc-950 overflow-hidden bg-zinc-800">
+                    <img src={img} alt="" className="h-full w-full object-cover" />
                   </div>
                 ))}
+                <div className="h-9 w-9 rounded-full border-2 border-zinc-950 bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-zinc-400">
+                  +
+                </div>
               </div>
-              <p>Join 2,400+ other addicts in denial</p>
+              <p>Join other addicts in denial</p>
             </div>
           </motion.div>
 

@@ -11,6 +11,8 @@ import { AGE_OF_SIGMAR_DATA } from '../data/ageOfSigmar';
 import { OLD_WORLD_DATA } from '../data/oldWorld';
 import { HORUS_HERESY_DATA } from '../data/horusHeresy';
 import { MARVEL_CP_DATA } from '../data/marvelCP';
+import { createCommunityActivity } from '../lib/community';
+import { isPaintedStatus, STATUS_COLORS } from '../lib/hobbyStatus';
 
 interface Model {
   id: string;
@@ -25,15 +27,6 @@ interface Model {
   createdAt: any;
   updatedAt: any;
 }
-
-const STATUS_COLORS = {
-  'Unbuilt': '#f87171', // red-400
-  'Assembled': '#d4d4d8', // zinc-300
-  'Primed': '#fbbf24', // amber-400
-  'Basic Paint': '#3b82f6', // blue-500
-  'Completed': '#60a5fa', // blue-400
-};
-
 
 // Helper to generate velocity data (last 6 months)
 const generateVelocityData = (models: Model[]) => {
@@ -57,7 +50,7 @@ const generateVelocityData = (models: Model[]) => {
       const date = m.updatedAt.toDate();
       const monthData = data.find(d => d.month === date.getMonth() && d.year === date.getFullYear());
       if (monthData) {
-        if (['Basic Paint', 'Completed'].includes(m.status)) {
+        if (isPaintedStatus(m.status)) {
           monthData.completed += m.qty;
         } else {
           monthData.assembled += m.qty;
@@ -213,6 +206,14 @@ export function Dashboard() {
         updatedAt: serverTimestamp()
       });
 
+      await createCommunityActivity(user, 'relapse', {
+        modelName: relapseFormData.modelName,
+        reason: relapseFormData.reason,
+        qty: relapseFormData.qty,
+        faction: relapseFormData.faction,
+        gameSystem: relapseFormData.gameSystem,
+      });
+
       // 3. Recovery plan: 1 model per $20, rounded up
       const modelsToFinish = Math.ceil(cost / 20);
       setRecoveryPlan(`Recovery Plan: Finish ${modelsToFinish} existing model${modelsToFinish !== 1 ? 's' : ''} before opening this box.`);
@@ -240,7 +241,7 @@ export function Dashboard() {
   const activeFaction = targetArmy ? targetArmy.faction : targetFaction;
   const readinessModels = activeFaction ? models.filter(m => m.faction === activeFaction) : models;
   const targetTotal = readinessModels.reduce((acc, m) => acc + m.qty, 0);
-  const paintedCount = readinessModels.filter(m => ['Basic Paint', 'Completed'].includes(m.status)).reduce((acc, m) => acc + m.qty, 0);
+  const paintedCount = readinessModels.filter(m => isPaintedStatus(m.status)).reduce((acc, m) => acc + m.qty, 0);
   const completionRate = targetTotal > 0 ? Math.round((paintedCount / targetTotal) * 100) : 0;
 
   // Calculate Games Stats
@@ -251,7 +252,7 @@ export function Dashboard() {
 
   // Recovery Savings
   const paintedModelsTotalCost = models
-    .filter(m => ['Basic Paint', 'Completed'].includes(m.status))
+    .filter(m => isPaintedStatus(m.status))
     .reduce((acc, m) => acc + ((m as any).unitCost || 0), 0);
 
   const totalRelapseSpent = relapses.reduce((acc, r) => acc + (Number(r.msrp) || 0), 0);
@@ -273,7 +274,7 @@ export function Dashboard() {
 
   // Pile of Shame (total MSRP of non-completed units)
   const pileOfShameCost = models
-    .filter(m => !['Basic Paint', 'Completed'].includes(m.status))
+    .filter(m => !isPaintedStatus(m.status))
     .reduce((acc, m) => acc + (m.unitCost || 0), 0);
 
   // Ledger of Excess (unbuilt kits sorted oldest first)
@@ -362,7 +363,7 @@ export function Dashboard() {
           subtitle="Total MSRP of unfinished units"
           icon={DollarSign}
           color="text-red-400"
-          trend={`${models.filter(m => !['Basic Paint', 'Completed'].includes(m.status)).length} units unfinished`}
+          trend={`${models.filter(m => !isPaintedStatus(m.status)).length} units unfinished`}
         />
         <MetricCard
           title="Actually Finished"
@@ -406,8 +407,8 @@ export function Dashboard() {
             </h2>
             <span className="text-xs font-medium px-2.5 py-1 bg-zinc-800 text-zinc-300 rounded-full border border-zinc-700">Last 6 Months</span>
           </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-72 min-h-[18rem] min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={velocityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">

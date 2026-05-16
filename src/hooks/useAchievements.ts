@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, doc, updateDoc, setDoc, arrayUnion } from 'firebase/firestore';
 import { ACHIEVEMENTS, Achievement } from '../data/achievements';
+import { createCommunityActivity } from '../lib/community';
 
 const attemptedUnlocks = new Set<string>();
 
@@ -22,7 +23,7 @@ export function useAchievements() {
     const evaluateAchievements = async () => {
       if (!user) return;
 
-      const newUnlocks: string[] = [];
+      const newUnlocks: Achievement[] = [];
       const totalModels = models.reduce((acc, m) => acc + m.qty, 0);
       const statusCounts = models.reduce((acc, m) => {
         acc[m.status] = (acc[m.status] || 0) + m.qty;
@@ -53,19 +54,29 @@ export function useAchievements() {
         }
 
         if (isUnlocked) {
-          newUnlocks.push(achievement.id);
+          newUnlocks.push(achievement);
           attemptedUnlocks.add(achievement.id);
           setRecentUnlock(achievement);
         }
       }
 
       if (newUnlocks.length > 0) {
-        currentUnlockedIds.push(...newUnlocks);
+        const newUnlockIds = newUnlocks.map((achievement) => achievement.id);
+        currentUnlockedIds.push(...newUnlockIds);
         // Update Firestore
         try {
           await setDoc(doc(db, 'users', user.uid), {
-            unlockedAchievements: arrayUnion(...newUnlocks)
+            unlockedAchievements: arrayUnion(...newUnlockIds)
           }, { merge: true });
+          await Promise.all(newUnlocks.map((achievement) => createCommunityActivity(
+            user,
+            'milestone',
+            {
+              achievementTitle: achievement.title,
+              achievementDescription: achievement.description,
+            },
+            `${user.uid}_${achievement.id}`
+          )));
         } catch (err) {
           console.error("Failed to unlock achievement:", err);
         }

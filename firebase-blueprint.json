@@ -53,9 +53,45 @@
         "createdAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
         }
       },
       "required": ["uid", "email", "role"]
+    },
+    "CommunityProfile": {
+      "title": "Community Profile",
+      "description": "Public and relationship-visible profile data safe to expose to other members.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "displayNameLower": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "isPublic": { "type": "boolean" },
+        "allowFriendRequests": { "type": "boolean" },
+        "allowSponsorRequests": { "type": "boolean" },
+        "shareRelapses": { "type": "boolean" },
+        "shareProgress": { "type": "boolean" },
+        "currentStreak": { "type": "number" },
+        "badgeCount": { "type": "number" },
+        "progressSummary": {
+          "type": "object",
+          "properties": {
+            "unbuilt": { "type": "number" },
+            "assembled": { "type": "number" },
+            "primed": { "type": "number" },
+            "basicPaint": { "type": "number" },
+            "completed": { "type": "number" },
+            "total": { "type": "number" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "displayNameLower", "isPublic", "allowFriendRequests", "allowSponsorRequests", "shareRelapses", "shareProgress"]
     },
     "MiniatureModel": {
       "title": "Miniature Model",
@@ -80,7 +116,7 @@
         },
         "status": {
           "type": "string",
-          "enum": ["Unbuilt", "Assembled", "Primed", "Painted", "Tabletop Ready"],
+          "enum": ["Unbuilt", "Assembled", "Primed", "Basic Paint", "Completed"],
           "description": "The current hobby status of the model."
         },
         "pointsPerModel": {
@@ -98,6 +134,10 @@
         "gameSystem": {
           "type": "string",
           "description": "The game system this model belongs to."
+        },
+        "images": {
+          "type": "object",
+          "description": "Optional progress image URLs keyed by hobby status."
         },
         "createdAt": {
           "type": "string",
@@ -249,12 +289,64 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "msrp", "boxName", "reason", "createdAt", "updatedAt"]
+    },
+    "ConnectionRequest": {
+      "title": "Connection Request",
+      "description": "A pending, accepted, or declined friend/sponsor request.",
+      "type": "object",
+      "properties": {
+        "fromUid": { "type": "string" },
+        "toUid": { "type": "string" },
+        "kind": { "type": "string", "enum": ["friend", "sponsor"] },
+        "status": { "type": "string", "enum": ["pending", "accepted", "declined"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fromUid", "toUid", "kind", "status"]
+    },
+    "Relationship": {
+      "title": "Relationship",
+      "description": "Accepted friend or sponsorship relationship used for access checks.",
+      "type": "object",
+      "properties": {
+        "requestId": { "type": "string" },
+        "kind": { "type": "string", "enum": ["friend", "sponsorship"] },
+        "status": { "type": "string", "enum": ["active"] },
+        "memberUids": { "type": "array", "items": { "type": "string" } },
+        "requesterUid": { "type": "string" },
+        "recipientUid": { "type": "string" },
+        "sponsorUid": { "type": "string" },
+        "sponseeUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["requestId", "kind", "status", "memberUids", "requesterUid", "recipientUid"]
+    },
+    "ActivityRecord": {
+      "title": "Activity Record",
+      "description": "Shareable community feed event for relapses, progress, and milestones.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userDisplayName": { "type": "string" },
+        "userPhotoURL": { "type": "string" },
+        "type": { "type": "string", "enum": ["relapse", "progress", "milestone"] },
+        "visibility": { "type": "string", "enum": ["public", "connections"] },
+        "details": { "type": "object" },
+        "likes": { "type": "array", "items": { "type": "string" } },
+        "commentCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userDisplayName", "type", "visibility", "details", "likes", "commentCount", "createdAt"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": { "$ref": "UserProfile" },
-      "description": "Stores user profiles."
+      "description": "Stores private user account data."
+    },
+    "/profiles/{userId}": {
+      "schema": { "$ref": "CommunityProfile" },
+      "description": "Stores public and community-visible member profiles."
     },
     "/collection/{modelId}": {
       "schema": { "$ref": "MiniatureModel" },
@@ -275,6 +367,18 @@
     "/relapses/{relapseId}": {
       "schema": { "$ref": "RelapseRecord" },
       "description": "Stores relapse records (purchases)."
+    },
+    "/connectionRequests/{requestId}": {
+      "schema": { "$ref": "ConnectionRequest" },
+      "description": "Stores friend and sponsorship requests."
+    },
+    "/relationships/{relationshipId}": {
+      "schema": { "$ref": "Relationship" },
+      "description": "Stores accepted friend and sponsorship relationships."
+    },
+    "/activities/{activityId}": {
+      "schema": { "$ref": "ActivityRecord" },
+      "description": "Stores shareable community activity feed events."
     }
   }
 }
