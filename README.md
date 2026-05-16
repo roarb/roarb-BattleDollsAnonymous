@@ -33,6 +33,12 @@ Battle Dolls Anonymous is a premium web application designed to help hobbyists t
 *   **Army Builder**: Plan your lists and see how they integrate with your existing collection.
 *   **Battle Logs**: Track your wins, losses, and mission performance.
 
+### 🤝 The Fellowship (Community & Social)
+*   **Social Connectivity**: Follow friends and sponsors to stay motivated and accountable.
+*   **Activity Feed**: A real-time stream of progress, relapses, and milestones from your hobby network.
+*   **Privacy First**: Granular controls allow you to toggle public visibility and decide exactly which updates (relapses, progress, milestones) are shared.
+*   **Hobby Sponsorship**: Request a sponsor to help you stay on track, or sponsor a fellow hobbyist to provide encouragement and support.
+
 ---
 
 ## 🚀 Technology Stack
@@ -80,8 +86,9 @@ Battle Dolls Anonymous is a premium web application designed to help hobbyists t
 
 ## 🔒 Security
 
-Battle Dolls Anonymous uses Firebase Security Rules to ensure that:
-*   Users can only view and edit their own hobby data.
-*   Images in Firebase Storage are scoped to individual user IDs.
-*   Admin-only data (like global game templates) is protected from unauthorized modification.
+Battle Dolls Anonymous uses hardened Firebase Security Rules to ensure:
+*   **Data Isolation**: Users have exclusive write access to their own hobby data.
+*   **Relationship-Based Access**: Public profiles and activity feeds are visibility-controlled based on active friend/sponsor connections and user privacy toggles.
+*   **Optimized Performance**: Rules are designed to support partial document updates and background sync for streaks and achievements.
+*   **Storage Scoping**: Images in Firebase Storage are strictly scoped to individual user IDs.
 
